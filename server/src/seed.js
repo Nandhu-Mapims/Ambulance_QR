@@ -356,10 +356,13 @@ async function seed() {
   console.log('━'.repeat(50));
   console.log('\n🎉  Seed complete!\n');
   console.log('📌  Login credentials:');
-  console.log('   ADMIN        →  admin@ambuqr.com      / Admin@123');
-  console.log('   SUPERVISOR   →  sup.ali@ambuqr.com    / Super@123');
-  console.log('   EMT          →  emt.karim@ambuqr.com  / Emt@1234');
-  console.log('   ASSESSOR     →  assessor@ambuqr.com   / View@1234');
+  console.log('   ADMIN        →  admin@ambuqr.com       / Admin@123');
+  console.log('   SUPERVISOR   →  sup.ali@ambuqr.com     / Super@123');
+  console.log('   SUPERVISOR   →  sup.nisa@ambuqr.com    / Super@123');
+  console.log('   EMT          →  emt.karim@ambuqr.com   / Emt@1234');
+  console.log('   EMT          →  emt.farid@ambuqr.com   / Emt@1234');
+  console.log('   EMT          →  emt.layla@ambuqr.com   / Emt@1234');
+  console.log('   ASSESSOR     →  assessor@ambuqr.com    / View@1234');
   console.log('');
 
   await mongoose.disconnect();

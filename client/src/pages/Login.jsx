@@ -185,14 +185,20 @@ export default function Login() {
             </p>
           </div>
 
-          {/* Demo credentials hint */}
+          {/* Demo credentials — all roles */}
           <div style={{
-            marginTop: '1rem', padding: '.75rem 1rem',
-            background: 'rgba(29,78,216,.05)', borderRadius: 12,
-            border: '1px solid rgba(29,78,216,.15)', fontSize: '.8rem', color: '#64748b',
+            marginTop: '1rem', padding: '.85rem 1rem',
+            background: 'rgba(29,78,216,.06)', borderRadius: 12,
+            border: '1px solid rgba(29,78,216,.15)', fontSize: '.75rem', color: '#475569',
+            lineHeight: 1.6,
           }}>
-            <strong style={{ color: '#1d4ed8' }}>Demo:</strong>{' '}
-            admin@ambuqr.com / Admin@123
+            <strong style={{ color: '#1d4ed8' }}>Demo logins</strong>
+            <div style={{ marginTop: '.4rem' }}>
+              <div>Admin: admin@ambuqr.com / Admin@123</div>
+              <div>Supervisor: sup.ali@ambuqr.com or sup.nisa@ambuqr.com / Super@123</div>
+              <div>EMT: emt.karim@ambuqr.com or emt.farid@ambuqr.com or emt.layla@ambuqr.com / Emt@1234</div>
+              <div>Auditor (Assessor): assessor@ambuqr.com / View@1234</div>
+            </div>
           </div>
         </div>
       </div>
