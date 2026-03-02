@@ -1,0 +1,201 @@
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { z } from 'zod';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+
+const schema = z.object({
+  email: z.string().email('Invalid email'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+const ROLE_HOME = {
+  EMT: '/scan',
+  ADMIN: '/admin/ambulances',
+  SUPERVISOR: '/supervisor/actions',
+  ASSESSOR_VIEW: '/reports',
+};
+
+const FEATURES = [
+  { icon: '🔐', text: 'Role-based access control' },
+  { icon: '📋', text: 'Dynamic audit checklists' },
+  { icon: '📊', text: 'Real-time CQI reporting' },
+  { icon: '⚠️', text: 'Corrective action tracking' },
+];
+
+export default function Login() {
+  const { login } = useAuth();
+  const toast = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: { email: 'admin@ambuqr.com', password: 'Admin@123' },
+  });
+
+  const onSubmit = async (data) => {
+    try {
+      setLoading(true);
+      setError('');
+      const user = await login(data);
+      toast(`Welcome back, ${user.name}!`, 'success');
+      const returnTo = searchParams.get('returnTo');
+      const from = location.state?.from?.pathname;
+      navigate(returnTo ? decodeURIComponent(returnTo) : from || ROLE_HOME[user.role] || '/audits', { replace: true });
+    } catch (err) {
+      let msg = err.response?.data?.message;
+      if (!msg) {
+        msg = (err.code === 'ERR_NETWORK' || err.message?.toLowerCase().includes('network'))
+          ? 'Cannot reach server. Is the API running on port 5000?'
+          : 'Login failed. Check your credentials.';
+      }
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="login-shell">
+      {/* ── Brand panel ── */}
+      <div className="login-brand">
+        <div className="login-brand-content anim-fade-up">
+          <div style={{ fontSize: '5rem', marginBottom: '1rem', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,.3))' }}>🚑</div>
+          <h1 style={{ fontSize: '2rem', fontWeight: 900, letterSpacing: '-.04em', marginBottom: '.5rem' }}>
+            AmbulanceQR
+          </h1>
+          <p style={{ opacity: .85, fontSize: '.95rem', marginBottom: '2.5rem' }}>
+            Audit Management System
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem', width: '100%', maxWidth: 280 }}>
+            {FEATURES.map((f, i) => (
+              <div
+                key={f.text}
+                className={`anim-fade-up anim-delay-${i + 1}`}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '.75rem',
+                  background: 'rgba(255,255,255,.14)', borderRadius: 10,
+                  padding: '.6rem 1rem', backdropFilter: 'blur(4px)',
+                }}
+              >
+                <span style={{ fontSize: '1.2rem' }}>{f.icon}</span>
+                <span style={{ fontSize: '.85rem', fontWeight: 500 }}>{f.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Form panel ── */}
+      <div className="login-form-side">
+        <div className="anim-slide-right" style={{ width: '100%', maxWidth: 420 }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 24,
+            padding: '2.5rem',
+            boxShadow: '0 20px 60px rgba(29,78,216,.10), 0 4px 16px rgba(0,0,0,.05)',
+          }}>
+            <div style={{ marginBottom: '2rem' }}>
+              <h2 style={{ fontWeight: 900, letterSpacing: '-.04em', marginBottom: '.25rem' }}>Sign In</h2>
+              <p style={{ color: '#6b7280', fontSize: '.9rem', margin: 0 }}>
+                Enter your credentials to continue
+              </p>
+            </div>
+
+            {error && (
+              <div className="anim-fade-in" style={{
+                background: '#eff6ff', border: '1px solid #93c5fd',
+                borderRadius: 10, padding: '.75rem 1rem',
+                color: '#1e40af', fontSize: '.875rem',
+                marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '.5rem',
+              }}>
+                <span>⚠️</span> {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontWeight: 600, fontSize: '.875rem', marginBottom: '.5rem' }}>
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  {...register('email')}
+                  style={{
+                    width: '100%', padding: '.7rem 1rem',
+                    border: `1.5px solid ${errors.email ? '#fca5a5' : '#e5e7eb'}`,
+                    borderRadius: 10, fontSize: '.9rem',
+                    outline: 'none', transition: 'all .2s',
+                    background: errors.email ? '#fff5f5' : '#f9fafb',
+                  }}
+                  onFocus={(e) => { e.target.style.borderColor = '#2563eb'; e.target.style.background = '#fff'; e.target.style.boxShadow = '0 0 0 4px rgba(29,78,216,.12)'; }}
+                  onBlur={(e) => { e.target.style.borderColor = errors.email ? '#93c5fd' : '#e2e8f0'; e.target.style.background = errors.email ? '#eff6ff' : '#f9fafb'; e.target.style.boxShadow = 'none'; }}
+                />
+                {errors.email && <p style={{ color: '#1d4ed8', fontSize: '.8rem', marginTop: '.25rem', marginBottom: 0 }}>{errors.email.message}</p>}
+              </div>
+
+              <div style={{ marginBottom: '1.75rem' }}>
+                <label style={{ display: 'block', fontWeight: 600, fontSize: '.875rem', marginBottom: '.5rem' }}>
+                  Password
+                </label>
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  {...register('password')}
+                  style={{
+                    width: '100%', padding: '.7rem 1rem',
+                    border: `1.5px solid ${errors.password ? '#fca5a5' : '#e5e7eb'}`,
+                    borderRadius: 10, fontSize: '.9rem',
+                    outline: 'none', transition: 'all .2s',
+                    background: errors.password ? '#fff5f5' : '#f9fafb',
+                  }}
+                  onFocus={(e) => { e.target.style.borderColor = '#2563eb'; e.target.style.background = '#fff'; e.target.style.boxShadow = '0 0 0 4px rgba(29,78,216,.12)'; }}
+                  onBlur={(e) => { e.target.style.borderColor = errors.password ? '#93c5fd' : '#e2e8f0'; e.target.style.background = errors.password ? '#eff6ff' : '#f9fafb'; e.target.style.boxShadow = 'none'; }}
+                />
+                {errors.password && <p style={{ color: '#1d4ed8', fontSize: '.8rem', marginTop: '.25rem', marginBottom: 0 }}>{errors.password.message}</p>}
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-hero"
+                style={{ width: '100%', fontSize: '1rem', padding: '.8rem' }}
+              >
+                {loading ? (
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem' }}>
+                    <span className="spinner-border spinner-border-sm" />
+                    Signing in…
+                  </span>
+                ) : 'Sign In →'}
+              </button>
+            </form>
+
+            <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '.8rem', marginTop: '1.5rem', marginBottom: 0 }}>
+              Contact your administrator to get an account
+            </p>
+          </div>
+
+          {/* Demo credentials hint */}
+          <div style={{
+            marginTop: '1rem', padding: '.75rem 1rem',
+            background: 'rgba(29,78,216,.05)', borderRadius: 12,
+            border: '1px solid rgba(29,78,216,.15)', fontSize: '.8rem', color: '#64748b',
+          }}>
+            <strong style={{ color: '#1d4ed8' }}>Demo:</strong>{' '}
+            admin@ambuqr.com / Admin@123
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

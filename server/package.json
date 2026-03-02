@@ -1,0 +1,33 @@
+{
+  "name": "ambulance-qr-server",
+  "version": "2.0.0",
+  "description": "Ambulance QR Audit System — production API",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "seed": "node src/seed.js",
+    "seed:fresh": "node src/seed.js --fresh",
+    "migrate-to-atlas": "node scripts/migrate-to-atlas.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.18.3",
+    "express-rate-limit": "^7.2.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.2.2",
+    "multer": "^1.4.5-lts.1",
+    "pino": "^9.0.0",
+    "puppeteer": "^22.0.0",
+    "qrcode": "^1.5.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0",
+    "pino-pretty": "^11.0.0"
+  }
+}

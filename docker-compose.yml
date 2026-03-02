@@ -1,0 +1,65 @@
+services:
+  # MongoDB — data in volume mongo_data (your old data if volume still exists)
+  mongo:
+    image: mongo:7
+    container_name: ambulance_mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: ambulance_qr
+    ports:
+      - "27017:27017"
+    networks:
+      - app_net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API server — uses Docker MongoDB (old data)
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: ambulance_server
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    env_file: ./server/.env
+    environment:
+      MONGO_URI: mongodb://mongo:27017/ambulance_qr
+      CLIENT_URL: http://localhost
+      NODE_ENV: production
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "5000:5000"
+    networks:
+      - app_net
+
+  # React client
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:5000/api
+    container_name: ambulance_client
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "80:80"
+    networks:
+      - app_net
+
+volumes:
+  mongo_data:
+  uploads_data:
+
+networks:
+  app_net:
+    driver: bridge
