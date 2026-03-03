@@ -1,7 +1,7 @@
 const { z } = require('zod');
 
 const QUESTION_TYPES = ['YESNO', 'TEXT', 'NUMBER', 'DROPDOWN', 'DATE', 'PHOTO'];
-const AMBULANCE_TYPES = ['BLS', 'ALS', 'ICU', 'NEONATAL', 'TRANSPORT'];
+const AMBULANCE_TYPES = ['BLS', 'ALS', 'TRANSPORT'];
 
 const questionSchema = z
   .object({

@@ -46,7 +46,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://localhost:5000/api
+        VITE_API_URL: /api
     container_name: ambulance_client
     restart: unless-stopped
     depends_on:

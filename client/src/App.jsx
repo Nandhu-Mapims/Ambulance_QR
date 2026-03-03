@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -41,6 +41,7 @@ export default function App() {
     <AuthProvider>
       <ToastProvider>
         <Routes>
+          <Route path="/audit-success" element={<AuditSuccess />} />
           <Route path="/login" element={<Login />} />
           <Route path="/*"    element={<AuthedLayout />} />
         </Routes>
@@ -54,6 +55,7 @@ function AuthedLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT);
   const { user } = useAuth();
+  const location = useLocation();
 
   useEffect(() => {
     const onResize = () => {
@@ -67,7 +69,11 @@ function AuthedLayout() {
   }, []);
 
   /* Redirect unauthenticated users */
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    const path = location.pathname + location.search;
+    const loginWithReturnTo = `/login?returnTo=${encodeURIComponent(path)}`;
+    return <Navigate to={loginWithReturnTo} replace />;
+  }
 
   /* Desktop: sidebar always expanded (no shrink). Mobile: overlay only. */
   const sideW = isMobile ? 0 : 240;
@@ -135,7 +141,6 @@ function AuthedLayout() {
           <Routes>
             <Route path="/audit/:numberPlate"          element={<PR><AuditLanding /></PR>} />
             <Route path="/audit/:numberPlate/fill"     element={<PR roles={['EMT']}><AuditFill /></PR>} />
-            <Route path="/audit-success"               element={<PR roles={['EMT']}><AuditSuccess /></PR>} />
             <Route path="/scan"                        element={<PR roles={['EMT']}><AuditScan /></PR>} />
             <Route path="/admin/ambulances"            element={<PR roles={['ADMIN']}><AmbulanceMaster /></PR>} />
             <Route path="/admin/templates"             element={<PR roles={['ADMIN']}><TemplateBuilder /></PR>} />

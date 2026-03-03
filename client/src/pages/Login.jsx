@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams, Navigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -26,7 +26,7 @@ const FEATURES = [
 ];
 
 export default function Login() {
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,13 +39,22 @@ export default function Login() {
     defaultValues: { email: 'admin@ambuqr.com', password: 'Admin@123' },
   });
 
+  const returnTo = searchParams.get('returnTo');
+
+  // If already logged in and not coming from a protected page with returnTo,
+  // send user to their role home instead of showing the login form again.
+  // For QR /audit/ flows (which always include returnTo), we always show login.
+  if (user && !returnTo) {
+    const redirectTo = ROLE_HOME[user.role] || '/audits';
+    return <Navigate to={redirectTo} replace />;
+  }
+
   const onSubmit = async (data) => {
     try {
       setLoading(true);
       setError('');
       const user = await login(data);
       toast(`Welcome back, ${user.name}!`, 'success');
-      const returnTo = searchParams.get('returnTo');
       const from = location.state?.from?.pathname;
       navigate(returnTo ? decodeURIComponent(returnTo) : from || ROLE_HOME[user.role] || '/audits', { replace: true });
     } catch (err) {

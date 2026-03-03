@@ -103,7 +103,7 @@ export default function AuditLanding() {
             <div className="row g-2 text-center">
               {[
                 { label: 'Questions', value: template.questions.length, color: 'primary' },
-                { label: 'Mandatory', value: requiredCount, color: 'danger' },
+                { label: 'Required', value: requiredCount, color: 'danger' },
                 { label: 'Yes/No', value: yesnoCount, color: 'warning' },
               ].map((s) => (
                 <div key={s.label} className="col-4">

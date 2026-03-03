@@ -54,25 +54,12 @@ const submitAudit = async (req, res, next) => {
 
   const responseMap = Object.fromEntries(responses.map((r) => [r.key, r]));
 
-  // Validate required questions + evidence rules
+  // Validate required questions
   for (const q of template.questions) {
     const resp = responseMap[q.key];
 
     if (q.required && (resp === undefined || resp.value === null || resp.value === '')) {
       const err = new Error(`Response required for question: "${q.label}"`);
-      err.statusCode = 400;
-      return next(err);
-    }
-
-    if (
-      q.type === 'YESNO' &&
-      resp?.value === 'NO' &&
-      q.requiresEvidenceIfNo &&
-      !resp.evidenceUrl
-    ) {
-      const err = new Error(
-        `Evidence photo required for non-compliant question: "${q.label}"`
-      );
       err.statusCode = 400;
       return next(err);
     }

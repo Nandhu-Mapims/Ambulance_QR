@@ -4,6 +4,7 @@ const {
   getAmbulance,
   createAmbulance,
   updateAmbulance,
+  deleteAmbulance,
   rotateQr,
 } = require('../controllers/ambulanceController');
 const { protect } = require('../middleware/auth');
@@ -20,6 +21,7 @@ router.get('/', asyncHandler(listAmbulances));
 router.get('/:id', asyncHandler(getAmbulance));
 router.post('/', authorize('ADMIN'), validate(ambulanceSchema), asyncHandler(createAmbulance));
 router.put('/:id', authorize('ADMIN'), validate(updateAmbulanceSchema), asyncHandler(updateAmbulance));
+router.delete('/:id', authorize('ADMIN'), asyncHandler(deleteAmbulance));
 router.post('/:id/rotate-qr', authorize('ADMIN'), asyncHandler(rotateQr));
 
 module.exports = router;

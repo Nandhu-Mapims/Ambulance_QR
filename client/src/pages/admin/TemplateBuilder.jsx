@@ -7,15 +7,13 @@ import Spinner from '../../components/Spinner';
 import { useToast } from '../../context/ToastContext';
 
 /* ── Constants ─────────────────────────────────────────────────────────────── */
-const TYPES = ['BLS', 'ALS', 'ICU', 'NEONATAL', 'TRANSPORT'];
+const TYPES = ['BLS', 'ALS', 'TRANSPORT'];
 const Q_TYPES = ['YESNO', 'TEXT', 'NUMBER', 'DROPDOWN', 'DATE', 'PHOTO'];
 
 /* Hospital theme: single cohesive palette (blue/slate) — no rainbow pastels */
 const TYPE_META = {
   BLS:       { color: '#0369a1', bg: '#e0f2fe', label: 'Basic Life Support' },
   ALS:       { color: '#0369a1', bg: '#e0f2fe', label: 'Advanced Life Support' },
-  ICU:       { color: '#0369a1', bg: '#e0f2fe', label: 'Intensive Care Unit' },
-  NEONATAL:  { color: '#0369a1', bg: '#e0f2fe', label: 'Neonatal Transport' },
   TRANSPORT: { color: '#0369a1', bg: '#e0f2fe', label: 'Patient Transport' },
 };
 
@@ -353,7 +351,7 @@ function QuestionCard({ index, total, field, control, register, remove, move, er
               cursor: 'pointer', fontSize: '.8rem', fontWeight: 600, userSelect: 'none',
             }}>
               <input type="checkbox" className="form-check-input m-0" {...register(`questions.${index}.required`)} />
-              Mandatory
+              Required
             </label>
 
             {qType === 'YESNO' && (
@@ -364,7 +362,7 @@ function QuestionCard({ index, total, field, control, register, remove, move, er
                 cursor: 'pointer', fontSize: '.8rem', fontWeight: 600, userSelect: 'none',
               }}>
                 <input type="checkbox" className="form-check-input m-0" {...register(`questions.${index}.requiresEvidenceIfNo`)} />
-                Evidence mandatory when answer is No
+                Evidence photo on NO (optional)
               </label>
             )}
           </div>
@@ -540,7 +538,7 @@ function Step2({ fields, control, register, errors, append, remove, move }) {
                         {q.label || 'Untitled question'}
                       </div>
                       <div style={{ fontSize: '.7rem', color: '#9ca3af' }}>
-                        {q.type} {q.required ? '• Mandatory' : ''}
+                        {q.type} {q.required ? '• Required' : ''}
                       </div>
                     </div>
                   </div>
@@ -615,9 +613,9 @@ function Step3({ watch }) {
       <div className="admin-step3-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem', marginBottom: '1.75rem' }}>
         {[
           { label: 'Total Questions', value: questions.length, color: 'var(--primary)' },
-          { label: 'Mandatory',       value: required,         color: '#047857' },
+          { label: 'Required',        value: required,         color: '#047857' },
           { label: 'Yes/No',          value: yesno,            color: 'var(--primary)' },
-          { label: 'Need Evidence',   value: evidence,         color: '#b45309' },
+          { label: 'Evidence flagged', value: evidence,        color: '#b45309' },
         ].map((s) => (
           <div key={s.label} style={{
             background: 'var(--card-bg)', border: '1px solid var(--card-border)',
@@ -689,7 +687,7 @@ function Step3({ watch }) {
                       </span>
                       <span style={{ fontSize: '.75rem', fontWeight: 700, color: qm.color }}>{qm.emoji} {q.type}</span>
                       {q.required && (
-                        <span style={{ fontSize: '.68rem', color: '#dc2626', fontWeight: 700, marginLeft: 'auto' }}>* Mandatory</span>
+                        <span style={{ fontSize: '.68rem', color: '#dc2626', fontWeight: 700, marginLeft: 'auto' }}>* Required</span>
                       )}
                     </div>
                     <div style={{ fontWeight: 600, fontSize: '.9rem', color: '#111', marginBottom: '.5rem' }}>

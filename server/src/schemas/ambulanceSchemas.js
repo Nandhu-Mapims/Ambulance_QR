@@ -1,6 +1,6 @@
 const { z } = require('zod');
 
-const TYPES = ['BLS', 'ALS', 'ICU', 'NEONATAL', 'TRANSPORT'];
+const TYPES = ['BLS', 'ALS', 'TRANSPORT'];
 
 const ambulanceSchema = z.object({
   numberPlate: z

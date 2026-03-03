@@ -5,18 +5,19 @@ import { z } from 'zod';
 import api from '../../api/axios';
 import Spinner from '../../components/Spinner';
 import { useToast } from '../../context/ToastContext';
+import mapimsLogo from '../../../logo/ambulance_png.png';
 
-const TYPE_COLOR = { BLS: '#2563eb', ALS: '#7c3aed', ICU: '#dc2626', NEONATAL: '#d97706', TRANSPORT: '#059669' };
-const TYPE_ICON  = { BLS: '🚑', ALS: '🚨', ICU: '🏥', NEONATAL: '👶', TRANSPORT: '🚐' };
+const TYPE_COLOR = { BLS: '#2563eb', ALS: '#7c3aed', TRANSPORT: '#059669' };
+const TYPE_ICON  = { BLS: '🚑', ALS: '🚨', TRANSPORT: '🚐' };
 
 const schema = z.object({
   numberPlate: z.string().min(1, 'Required'),
-  type: z.enum(['BLS', 'ALS', 'ICU', 'NEONATAL', 'TRANSPORT'], { required_error: 'Required' }),
+  type: z.enum(['BLS', 'ALS', 'TRANSPORT'], { required_error: 'Required' }),
   station: z.string().optional(),
   isActive: z.boolean().optional(),
 });
 
-/* ── QR Print Modal ─────────────────────────────────────────────────────────── */
+/* ── QR Print / Download Modal ─────────────────────────────────────────────── */
 function QRModal({ ambulance, qrBase64, onClose }) {
   const handlePrint = () => {
     const win = window.open('', '_blank');
@@ -24,22 +25,121 @@ function QRModal({ ambulance, qrBase64, onClose }) {
       <html><head><title>QR — ${ambulance.numberPlate}</title>
       <style>
         body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 40px; background: #fff; }
+        .title { font-size: 1.4rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 1rem; }
         .plate { font-family: monospace; font-size: 2rem; font-weight: 900; letter-spacing: .1em;
                  background: #1a1a2e; color: #fff; padding: .5rem 1.5rem; border-radius: 8px;
                  display: inline-block; margin-bottom: 8px; box-shadow: 3px 3px 0 #dc2626; }
         .badge { display: inline-block; background: ${TYPE_COLOR[ambulance.type]}22; color: ${TYPE_COLOR[ambulance.type]};
                  border-radius: 99px; padding: .2rem .8rem; font-size: .85rem; font-weight: 700; margin: 4px; }
         img { border: 3px solid #1a1a2e; border-radius: 12px; margin: 20px auto; display: block; }
-        .hint { font-size: .75rem; color: #aaa; margin-top: 8px; }
+        .hint { font-size: .8rem; color: #4b5563; margin-top: 8px; }
+        .footer { margin-top: 24px; font-size: .8rem; color: #6b7280; }
+        .footer-plate { font-family: monospace; font-weight: 800; letter-spacing: .18em; margin-top: 4px; }
       </style></head><body>
+        <div class="title">MAPIMS Ambulance Checklist</div>
         <div class="plate">${ambulance.numberPlate}</div><br/>
         <span class="badge">${TYPE_ICON[ambulance.type]} ${ambulance.type}</span>
         ${ambulance.station ? `<span class="badge">📍 ${ambulance.station}</span>` : ''}
         <img src="${qrBase64}" style="width:220px"/>
-        <p class="hint">Scan to start ambulance audit</p>
+        <p class="hint">Please scan this QR code to start the ambulance audit.</p>
+        <div class="footer">
+          Plate number
+          <div class="footer-plate">${ambulance.numberPlate}</div>
+        </div>
       </body></html>`);
     win.document.close();
     win.print();
+  };
+
+  const handleDownloadCard = () => {
+    const canvas = document.createElement('canvas');
+    const width = 900;
+    const height = 1400;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+
+    // Background (deep navy)
+    ctx.fillStyle = '#061727';
+    ctx.fillRect(0, 0, width, height);
+
+    const centerX = width / 2;
+
+    // Title block (MAPIMS Ambulance Checklist)
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#f9fafb';
+    ctx.font = 'bold 40px "Segoe UI", sans-serif';
+    ctx.fillText('MAPIMS AMBULANCE', centerX, 280);
+    ctx.fillText('CHECKLIST', centerX, 340);
+
+    // Plate text under title
+    const plateText = ambulance.numberPlate;
+    ctx.font = 'bold 30px "Consolas", monospace';
+    ctx.fillStyle = '#e5e7eb';
+    ctx.fillText(plateText, centerX, 400);
+
+    // Load logo and QR, then draw once both are ready
+    const qrImg = new Image();
+    const logoImg = new Image();
+    let loaded = 0;
+
+    const handleReady = () => {
+      loaded += 1;
+      if (loaded < 2) return;
+
+      // Logo in top-center area (proportional, larger)
+      const maxLogoWidth = 450;
+      const maxLogoHeight = 220;
+      const scale = Math.min(maxLogoWidth / logoImg.width, maxLogoHeight / logoImg.height);
+      const logoW = logoImg.width * scale;
+      const logoH = logoImg.height * scale;
+      
+      const logoX = centerX - logoW / 2;
+      const logoY = 50;
+      ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+
+      // QR image in the middle
+      const qrSize = 480;
+      const qrY = 480;
+      const qrX = centerX - qrSize / 2;
+
+      // QR border card
+      ctx.fillStyle = '#0b2138';
+      ctx.strokeStyle = '#d1d5db';
+      ctx.lineWidth = 6;
+      ctx.roundRect(qrX - 28, qrY - 28, qrSize + 56, qrSize + 56, 44);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+      // Hint text (bigger, bold)
+      ctx.fillStyle = '#e5e7eb';
+      ctx.font = 'bold 28px "Segoe UI", sans-serif';
+      ctx.fillText(
+        'Scan to begin audit.',
+        centerX,
+        qrY + qrSize + 120
+      );
+
+      // Footer text
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '18px "Segoe UI", sans-serif';
+      ctx.fillText('Authorized Medical Operations', centerX, height - 120);
+
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `mapims-qr-${ambulance.numberPlate}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    qrImg.onload = handleReady;
+    logoImg.onload = handleReady;
+    qrImg.src = qrBase64;
+    logoImg.src = mapimsLogo;
   };
 
   return (
@@ -66,9 +166,9 @@ function QRModal({ ambulance, qrBase64, onClose }) {
         </div>
 
         <div className="admin-qr-modal-actions">
-          <a href={qrBase64} download={`qr-${ambulance.numberPlate}.png`} className="admin-qr-modal-download">
-            ⬇️ Download
-          </a>
+          <button type="button" onClick={handleDownloadCard} className="admin-qr-modal-download">
+            ⬇️ Download QR card
+          </button>
           <button type="button" onClick={handlePrint} className="btn-hero admin-qr-modal-print">
             🖨️ Print
           </button>
@@ -79,7 +179,7 @@ function QRModal({ ambulance, qrBase64, onClose }) {
 }
 
 /* ── Table row (list view) ───────────────────────────────────────────────────── */
-function AmbulanceRow({ amb, onRotate, onToggle, onViewQR, rotating }) {
+function AmbulanceRow({ amb, onRotate, onToggle, onViewQR, onDelete, rotating, deleting }) {
   const color = TYPE_COLOR[amb.type] ?? '#64748b';
   const lastRotated = amb.lastQrRotatedAt ? new Date(amb.lastQrRotatedAt).toLocaleDateString('en-GB') : '—';
   return (
@@ -97,7 +197,7 @@ function AmbulanceRow({ amb, onRotate, onToggle, onViewQR, rotating }) {
           background: `${color}18`, color, borderRadius: 99, padding: '.2rem .6rem',
           fontSize: '.75rem', fontWeight: 700,
         }}>
-          {TYPE_ICON[amb.type]} {amb.type}
+          {TYPE_ICON[amb.type] ?? '🚑'} {amb.type}
         </span>
       </td>
       <td style={{ padding: '.75rem 1rem', verticalAlign: 'middle', color: 'var(--sidebar-text-dim)', fontSize: '.875rem' }}>
@@ -162,6 +262,19 @@ function AmbulanceRow({ amb, onRotate, onToggle, onViewQR, rotating }) {
           >
             {amb.isActive ? '⏸ Deactivate' : '▶ Activate'}
           </button>
+          <button
+            type="button"
+            onClick={() => onDelete(amb)}
+            disabled={deleting === amb._id}
+            aria-label={`Delete ${amb.numberPlate}`}
+            style={{
+              padding: '.4rem .6rem', borderRadius: 'var(--radius-sm)', fontSize: '.75rem', fontWeight: 600,
+              border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626',
+              cursor: deleting === amb._id ? 'wait' : 'pointer', transition: 'var(--transition)',
+            }}
+          >
+            {deleting === amb._id ? <span className="spinner-border spinner-border-sm" /> : '🗑 Delete'}
+          </button>
         </div>
       </td>
     </tr>
@@ -177,6 +290,7 @@ export default function AmbulanceMaster() {
   const [showForm, setShowForm] = useState(false);
   const [qrModal, setQrModal] = useState(null);
   const [rotating, setRotating] = useState(null);
+  const [deleting, setDeleting] = useState(null);
   const [qrCache, setQrCache] = useState({});    // numberPlate → base64
   const [typeFilter, setTypeFilter] = useState('');
 
@@ -225,6 +339,26 @@ export default function AmbulanceMaster() {
       setAmbulances((prev) => prev.map((a) => (a._id === amb._id ? data.ambulance : a)));
       toast(`${amb.numberPlate} ${amb.isActive ? 'deactivated' : 'activated'}`, 'info');
     } catch (e) { toast(e.response?.data?.message || 'Update failed', 'error'); }
+  };
+
+  const handleDelete = async (amb) => {
+    if (!window.confirm(`Delete ambulance ${amb.numberPlate}? This cannot be undone.`)) return;
+    setDeleting(amb._id);
+    try {
+      await api.delete(`/ambulances/${amb._id}`);
+      setAmbulances((prev) => prev.filter((a) => a._id !== amb._id));
+      setQrCache((c) => {
+        const next = { ...c };
+        delete next[amb.numberPlate];
+        return next;
+      });
+      if (qrModal?.ambulance?._id === amb._id) setQrModal(null);
+      toast(`${amb.numberPlate} removed`, 'success');
+    } catch (e) {
+      toast(e.response?.data?.message ?? 'Delete failed', 'error');
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const handleViewQR = async (amb) => {
@@ -294,7 +428,7 @@ export default function AmbulanceMaster() {
                 </label>
                 <select className={`form-select form-select-sm ${errors.type ? 'is-invalid' : ''}`} style={{ fontSize: '14px' }} {...register('type')}>
                   <option value="">Select type…</option>
-                  {['BLS', 'ALS', 'ICU', 'NEONATAL', 'TRANSPORT'].map((t) => (
+                  {['BLS', 'ALS', 'TRANSPORT'].map((t) => (
                     <option key={t} value={t}>{TYPE_ICON[t]} {t}</option>
                   ))}
                 </select>
@@ -313,7 +447,7 @@ export default function AmbulanceMaster() {
       <div className="admin-filter-bar">
         <span className="admin-filter-label">Filter:</span>
         <div className="admin-filter-pills">
-          {['', 'BLS', 'ALS', 'ICU', 'NEONATAL', 'TRANSPORT'].map((t) => {
+          {['', 'BLS', 'ALS', 'TRANSPORT'].map((t) => {
             const isActive = typeFilter === t;
             const pillColor = TYPE_COLOR[t] ?? '#0369a1';
             return (
@@ -377,7 +511,9 @@ export default function AmbulanceMaster() {
                         onRotate={handleRotate}
                         onToggle={handleToggle}
                         onViewQR={handleViewQR}
+                        onDelete={handleDelete}
                         rotating={rotating}
+                        deleting={deleting}
                       />
                     ))}
                   </tbody>

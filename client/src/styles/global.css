@@ -320,8 +320,6 @@ code, kbd, pre, samp,
 /* Type color maps */
 .type-bls      { --type-color: #2563eb; }
 .type-als      { --type-color: #7c3aed; }
-.type-icu      { --type-color: #dc2626; }
-.type-neonatal { --type-color: #d97706; }
 .type-transport{ --type-color: #059669; }
 
 .type-badge {

@@ -4,11 +4,15 @@ const { generateSecureToken, hashToken } = require('../utils/tokenUtils');
 const logger = require('../utils/logger');
 
 /** Build the public QR URL that encodes into the QR image.
- *  Points directly to the fill page so scanning immediately opens the checklist.
+ * For security, QR codes point to the login page with a returnTo param,
+ * so scanning always starts from the login screen (fresh EMT credentials)
+ * and then redirects into the audit fill page.
  */
 const buildQrUrl = (numberPlate, token) => {
-  const base = process.env.CLIENT_URL || 'http://localhost:5173';
-  return `${base}/audit/${encodeURIComponent(numberPlate)}/fill?t=${token}`;
+  const base = process.env.CLIENT_URL || 'https://localhost:5173';
+  const targetPath = `/audit/${encodeURIComponent(numberPlate)}/fill?t=${token}`;
+  const encodedReturnTo = encodeURIComponent(targetPath);
+  return `${base}/login?returnTo=${encodedReturnTo}`;
 };
 
 const buildQr = async (ambulance) => {
@@ -72,6 +76,17 @@ const updateAmbulance = async (req, res, next) => {
   res.json({ success: true, ambulance });
 };
 
+const deleteAmbulance = async (req, res, next) => {
+  const ambulance = await Ambulance.findByIdAndDelete(req.params.id);
+  if (!ambulance) {
+    const err = new Error('Ambulance not found');
+    err.statusCode = 404;
+    return next(err);
+  }
+  logger.info({ numberPlate: ambulance.numberPlate }, 'Ambulance deleted');
+  res.json({ success: true, message: 'Ambulance deleted' });
+};
+
 const rotateQr = async (req, res, next) => {
   const ambulance = await Ambulance.findById(req.params.id).select('+qrTokenHash');
   if (!ambulance) {
@@ -119,7 +134,7 @@ const resolveQr = async (req, res, next) => {
 
   // Validate token unless bypassing
   if (!bypassToken && ambulance.qrTokenHash !== hashToken(token)) {
-    const err = new Error('Invalid or expired QR code');
+    const err = new Error('Invalid QR code');
     err.statusCode = 401;
     return next(err);
   }
@@ -153,6 +168,7 @@ module.exports = {
   getAmbulance,
   createAmbulance,
   updateAmbulance,
+  deleteAmbulance,
   rotateQr,
   resolveQr,
 };

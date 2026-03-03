@@ -4,6 +4,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import api from '../../api/axios';
 import Spinner from '../../components/Spinner';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 
 /* ── file upload helper ───────────────────────────────────────────────────── */
 const uploadFile = async (file) => {
@@ -36,7 +37,7 @@ function EvidenceField({ questionKey, value, onChange }) {
   return (
     <div className="mt-2 p-2 bg-danger bg-opacity-10 rounded border border-danger border-opacity-25">
       <label className="form-label text-danger small fw-semibold mb-1">
-        Evidence mandatory for NO answer
+        Evidence photo for NO answer (optional)
       </label>
       <input
         type="file"
@@ -167,6 +168,7 @@ export default function AuditFill() {
   const token = searchParams.get('t');
   const navigate = useNavigate();
   const toast = useToast();
+  const { logout } = useAuth();
 
   const [resolveData, setResolveData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -179,7 +181,7 @@ export default function AuditFill() {
     const params = token ? { t: token } : {};
     api.get(`/audit/resolve/${encodeURIComponent(numberPlate)}`, { params })
       .then(({ data }) => setResolveData(data))
-      .catch((e) => setError(e.response?.data?.message || 'Invalid or expired QR code.'))
+      .catch((e) => setError(e.response?.data?.message || 'Invalid QR code.'))
       .finally(() => setLoading(false));
   }, [numberPlate, token]);
 
@@ -229,6 +231,7 @@ export default function AuditFill() {
       });
 
       toast('Audit submitted successfully!', 'success');
+      await logout();
       navigate('/audit-success', { state: { audit: data.audit } });
     } catch (e) {
       const msg =

@@ -46,81 +46,63 @@ const USERS = [
 
 /* ── Ambulance data ───────────────────────────────────────────────────────── */
 const AMBULANCES = [
-  { numberPlate: 'BLS-001', type: 'BLS',       station: 'HQ' },
-  { numberPlate: 'BLS-002', type: 'BLS',       station: 'North' },
-  { numberPlate: 'ALS-001', type: 'ALS',       station: 'HQ' },
-  { numberPlate: 'ALS-002', type: 'ALS',       station: 'South' },
-  { numberPlate: 'ICU-001', type: 'ICU',       station: 'HQ' },
-  { numberPlate: 'NEO-001', type: 'NEONATAL',  station: 'HQ' },
-  { numberPlate: 'TRN-001', type: 'TRANSPORT', station: 'North' },
-  { numberPlate: 'TRN-002', type: 'TRANSPORT', station: 'South', isActive: false },
+  // ALS
+  { numberPlate: 'TN-19-BZ-1980', type: 'ALS', station: 'HQ' },
+  { numberPlate: 'TN-19-Y-0792', type: 'ALS', station: 'HQ' },
+  { numberPlate: 'TN-19-U-1341', type: 'ALS', station: 'HQ' },
+  { numberPlate: 'TN-19-BX-2772', type: 'ALS', station: 'HQ' },
+  { numberPlate: 'TN-19-BS-9009', type: 'ALS', station: 'HQ' },
+  { numberPlate: 'T0126TN6151A', type: 'ALS', station: 'HQ' },
+  // BLS
+  { numberPlate: 'TN-19-BS-9990', type: 'BLS', station: 'HQ' },
+  { numberPlate: 'TN-19-BS-9909', type: 'BLS', station: 'HQ' },
+  { numberPlate: 'TN-19-BS-9549', type: 'BLS', station: 'HQ' },
+  { numberPlate: 'TN-19-AY-0369', type: 'BLS', station: 'HQ' },
+  { numberPlate: 'TN-19-AZ-9954', type: 'BLS', station: 'HQ' },
+  // TRANSPORT
+  { numberPlate: 'TN-19-V-0567', type: 'TRANSPORT', station: 'HQ' },
+  { numberPlate: 'TN-09-AS-6660', type: 'TRANSPORT', station: 'HQ' },
+  { numberPlate: 'TN-19-V-0234', type: 'TRANSPORT', station: 'HQ' },
 ];
 
 /* ── Checklist templates ──────────────────────────────────────────────────── */
-const BLS_QUESTIONS = [
-  { key: 'oxygen_cylinder',     label: 'Oxygen cylinder full and functional?',          type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 0 },
-  { key: 'suction_device',      label: 'Suction device operational?',                    type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 1 },
-  { key: 'aed_charged',         label: 'AED fully charged and pads attached?',           type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 2 },
-  { key: 'first_aid_kit',       label: 'First aid kit stocked and sealed?',              type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 3 },
-  { key: 'stretcher_condition', label: 'Stretcher condition',                             type: 'DROPDOWN', required: true,  options: ['Good', 'Fair', 'Needs Repair'], order: 4 },
-  { key: 'mileage',             label: 'Current odometer reading (km)',                  type: 'NUMBER',   required: true,  order: 5 },
-  { key: 'last_service_date',   label: 'Date of last service',                           type: 'DATE',     required: false, order: 6 },
-  { key: 'radio_comms',         label: 'Radio communications functional?',               type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 7 },
-  { key: 'vehicle_cleanliness', label: 'Vehicle interior cleaned and disinfected?',      type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 8 },
-  { key: 'remarks',             label: 'Additional remarks',                             type: 'TEXT',     required: false, order: 9 },
+/* BLS/ALS shared checklist (16 items from BLS AMBULANCE CHECKLIST) */
+const BLS_ALS_QUESTIONS = [
+  { key: 'air_tyre_wheels',      label: 'Air tyre / wheels condition',                          type: 'DROPDOWN', required: true, requiresEvidenceIfNo: false, order: 0, options: ['Good', 'Needs Attention', 'Not OK'] },
+  { key: 'battery_charging',     label: 'Battery charging capacity',                            type: 'DROPDOWN', required: true, requiresEvidenceIfNo: false, order: 1, options: ['Good', 'Needs Charge', 'Replace Soon'] },
+  { key: 'headlight_siren',      label: 'Headlight and siren / alarm working?',                 type: 'YESNO',    required: true, requiresEvidenceIfNo: false, order: 2 },
+  { key: 'air_condition',        label: 'Air condition working?',                               type: 'YESNO',    required: true, requiresEvidenceIfNo: false, order: 3 },
+  { key: 'fuel_level',           label: 'Fuel level',                                           type: 'DROPDOWN', required: true, requiresEvidenceIfNo: false, order: 4, options: ['Full', 'Three quarters', 'Half', 'Quarter or less'] },
+  { key: 'oxygen_spare_cylinder', label: 'Oxygen (O2) level & spare cylinder available?',       type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 5 },
+  { key: 'defibrillator',       label: 'Defibrillator working with accessories?',               type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 6 },
+  { key: 'patient_monitor',     label: 'Patient monitor with accessories OK?',                  type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 7 },
+  { key: 'ventilator_accessories', label: 'Ventilator with accessories (circuit, mask, tubing)?', type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 8 },
+  { key: 'suction_nebulizer',   label: 'Suction & nebulizer working?',                          type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 9 },
+  { key: 'laryngoscope_sets',   label: 'Laryngoscope sets (handles, blades, batteries) available?', type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 10 },
+  { key: 'ambu_bag_sets',       label: 'AMBU bag sets (adult / pediatric / neonatal) available?', type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 11 },
+  { key: 'stretcher_bedsheets', label: 'Stretcher with bedsheets OK?',                         type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 12 },
+  { key: 'emergency_medicine',  label: 'Emergency medicine available?',                        type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 13 },
+  { key: 'bp_steth_cbg_thermo', label: 'BP, stethoscope, CBG & thermometer available?',         type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 14 },
+  { key: 'ppe_sanitizer_waste', label: 'PPE kit, hand sanitizer, biomedical waste bags available?', type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 15 },
 ];
 
-const ALS_QUESTIONS = [
-  { key: 'cardiac_monitor',     label: 'Cardiac monitor/defibrillator functional?',      type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 0 },
-  { key: 'iv_supplies',         label: 'IV supplies adequate (lines, fluids, needles)?',  type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 1 },
-  { key: 'drug_kit_sealed',     label: 'Drug kit sealed and inventory correct?',         type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 2 },
-  { key: 'oxygen_cylinder',     label: 'Oxygen cylinder full and functional?',           type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 3 },
-  { key: 'intubation_kit',      label: 'Intubation kit complete?',                       type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 4 },
-  { key: 'ventilator_ok',       label: 'Transport ventilator checked?',                  type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 5 },
-  { key: 'stretcher_condition', label: 'Stretcher/trolley condition',                    type: 'DROPDOWN', required: true,  options: ['Good', 'Fair', 'Needs Repair'], order: 6 },
-  { key: 'drug_expiry_check',   label: 'Drug expiry dates checked?',                     type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 7 },
-  { key: 'mileage',             label: 'Current odometer reading (km)',                  type: 'NUMBER',   required: true,  order: 8 },
-  { key: 'remarks',             label: 'Additional remarks',                             type: 'TEXT',     required: false, order: 9 },
-];
+const BLS_QUESTIONS = BLS_ALS_QUESTIONS;
 
-const ICU_QUESTIONS = [
-  { key: 'ventilator_ok',       label: 'ICU ventilator fully functional?',               type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 0 },
-  { key: 'infusion_pumps',      label: 'Infusion pumps charged and operational?',        type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 1 },
-  { key: 'cardiac_monitor',     label: 'Cardiac monitor with capnography functional?',   type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 2 },
-  { key: 'drug_kit_sealed',     label: 'ICU drug kit sealed and inventoried?',           type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 3 },
-  { key: 'oxygen_supply',       label: 'Primary + backup oxygen adequate (>80%)?',       type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 4 },
-  { key: 'suction_ok',          label: 'Suction system tested?',                         type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 5 },
-  { key: 'temperature_control', label: 'Cabin temperature control working?',             type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 6 },
-  { key: 'mileage',             label: 'Current odometer reading (km)',                  type: 'NUMBER',   required: true,  order: 7 },
-  { key: 'remarks',             label: 'Additional remarks',                             type: 'TEXT',     required: false, order: 8 },
-];
-
-const NEONATAL_QUESTIONS = [
-  { key: 'incubator_ok',        label: 'Transport incubator functional and pre-warmed?', type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 0 },
-  { key: 'neonatal_ventilator', label: 'Neonatal ventilator operational?',               type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 1 },
-  { key: 'pulse_oximetry',      label: 'Neonatal pulse oximetry functional?',            type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 2 },
-  { key: 'neonatal_drug_kit',   label: 'Neonatal drug/resuscitation kit checked?',       type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 3 },
-  { key: 'oxygen_supply',       label: 'Oxygen adequate (>80%)?',                        type: 'YESNO',    required: true,  requiresEvidenceIfNo: true,  order: 4 },
-  { key: 'temperature',         label: 'Cabin temperature (°C)',                         type: 'NUMBER',   required: true,  order: 5 },
-  { key: 'remarks',             label: 'Additional remarks',                             type: 'TEXT',     required: false, order: 6 },
-];
+const ALS_QUESTIONS = BLS_ALS_QUESTIONS;
 
 const TRANSPORT_QUESTIONS = [
-  { key: 'wheelchair_secured',  label: 'Wheelchair / stretcher securing belts OK?',      type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 0 },
-  { key: 'first_aid_kit',       label: 'Basic first aid kit present?',                   type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 1 },
-  { key: 'vehicle_cleanliness', label: 'Vehicle clean and sanitised?',                   type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 2 },
-  { key: 'fuel_level',          label: 'Fuel level adequate (>50%)?',                    type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 3 },
-  { key: 'communication',       label: 'Communication device functional?',               type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 4 },
-  { key: 'mileage',             label: 'Current odometer reading (km)',                  type: 'NUMBER',   required: true,  order: 5 },
-  { key: 'vehicle_condition',   label: 'Overall vehicle condition',                      type: 'DROPDOWN', required: true,  options: ['Good', 'Fair', 'Needs Repair'], order: 6 },
-  { key: 'remarks',             label: 'Additional remarks',                             type: 'TEXT',     required: false, order: 7 },
+  { key: 'air_tyre_wheels',     label: 'Air tyre / wheels condition',                    type: 'DROPDOWN', required: true,  requiresEvidenceIfNo: false, order: 0, options: ['Good', 'Needs Attention', 'Not OK'] },
+  { key: 'battery_charging',    label: 'Battery charging capacity',                      type: 'DROPDOWN', required: true,  requiresEvidenceIfNo: false, order: 1, options: ['Good', 'Needs Charge', 'Replace Soon'] },
+  { key: 'headlight_siren',     label: 'Headlight and siren / alarm working?',           type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 2 },
+  { key: 'fuel_level',          label: 'Fuel level',                                     type: 'DROPDOWN', required: true,  requiresEvidenceIfNo: false, order: 3, options: ['Full', 'Three quarters', 'Half', 'Quarter or less'] },
+  { key: 'emergency_medicine',  label: 'Emergency medicines available?',                 type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 4 },
+  { key: 'interior_cleanliness',label: 'Interior cleanliness satisfactory?',             type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 5 },
+  { key: 'first_aid_box',       label: 'First aid box complete and accessible?',         type: 'YESNO',    required: true,  requiresEvidenceIfNo: false, order: 6 },
 ];
 
 const TEMPLATES_DATA = [
-  { ambulanceType: 'BLS',       name: 'BLS Standard Checklist',       version: 1, questions: BLS_QUESTIONS },
-  { ambulanceType: 'ALS',       name: 'ALS Advanced Checklist',        version: 1, questions: ALS_QUESTIONS },
-  { ambulanceType: 'ICU',       name: 'ICU Mobile Critical Care',      version: 1, questions: ICU_QUESTIONS },
-  { ambulanceType: 'NEONATAL',  name: 'Neonatal Transport Protocol',   version: 1, questions: NEONATAL_QUESTIONS },
+  { ambulanceType: 'BLS',       name: 'BLS Ambulance Checklist',        version: 1, questions: BLS_QUESTIONS },
+  { ambulanceType: 'ALS',       name: 'ALS Ambulance Checklist',        version: 1, questions: ALS_QUESTIONS },
   { ambulanceType: 'TRANSPORT', name: 'Patient Transport Checklist',   version: 1, questions: TRANSPORT_QUESTIONS },
 ];
 
@@ -252,21 +234,21 @@ async function seed() {
   } else {
     const auditDefs = [
       // ── Fully compliant (SUBMITTED) ──────────────────────────────────────
-      { plate: 'BLS-001', emt: emtUsers[0], daysAgo: 1,  pass: true,  tripType: 'EMERGENCY' },
-      { plate: 'BLS-002', emt: emtUsers[1], daysAgo: 2,  pass: true,  tripType: 'TRANSFER' },
-      { plate: 'ALS-001', emt: emtUsers[0], daysAgo: 3,  pass: true,  tripType: 'EMERGENCY' },
-      { plate: 'ICU-001', emt: emtUsers[2], daysAgo: 4,  pass: true,  tripType: 'TRANSFER' },
-      { plate: 'TRN-001', emt: emtUsers[1], daysAgo: 5,  pass: true,  tripType: 'ROUTINE' },
+      { plate: 'TN-19-BS-9990', emt: emtUsers[0], daysAgo: 1,  pass: true,  tripType: 'EMERGENCY' },
+      { plate: 'TN-19-BS-9909', emt: emtUsers[1], daysAgo: 2,  pass: true,  tripType: 'TRANSFER' },
+      { plate: 'TN-19-BZ-1980', emt: emtUsers[0], daysAgo: 3,  pass: true,  tripType: 'EMERGENCY' },
+      { plate: 'TN-19-Y-0792', emt: emtUsers[2], daysAgo: 4,  pass: true,  tripType: 'TRANSFER' },
+      { plate: 'TN-19-V-0567', emt: emtUsers[1], daysAgo: 5,  pass: true,  tripType: 'ROUTINE' },
       // ── Non-compliant (NEED_ACTION) ──────────────────────────────────────
-      { plate: 'BLS-001', emt: emtUsers[0], daysAgo: 6,  pass: false, tripType: 'EMERGENCY' },
-      { plate: 'ALS-002', emt: emtUsers[2], daysAgo: 7,  pass: false, tripType: 'EMERGENCY' },
-      { plate: 'NEO-001', emt: emtUsers[1], daysAgo: 9,  pass: false, tripType: 'TRANSFER' },
+      { plate: 'TN-19-BS-9990', emt: emtUsers[0], daysAgo: 6,  pass: false, tripType: 'EMERGENCY' },
+      { plate: 'TN-19-U-1341', emt: emtUsers[2], daysAgo: 7,  pass: false, tripType: 'EMERGENCY' },
+      { plate: 'TN-19-V-0567', emt: emtUsers[1], daysAgo: 9,  pass: false, tripType: 'TRANSFER' },
       // ── Historical SUBMITTED ─────────────────────────────────────────────
-      { plate: 'BLS-001', emt: emtUsers[0], daysAgo: 12, pass: true,  tripType: 'ROUTINE' },
-      { plate: 'ALS-001', emt: emtUsers[2], daysAgo: 14, pass: true,  tripType: 'EMERGENCY' },
-      { plate: 'BLS-002', emt: emtUsers[1], daysAgo: 16, pass: false, tripType: 'TRANSFER', markedClosed: true },
-      { plate: 'ICU-001', emt: emtUsers[0], daysAgo: 20, pass: true,  tripType: 'TRANSFER' },
-      { plate: 'TRN-001', emt: emtUsers[2], daysAgo: 25, pass: true,  tripType: 'ROUTINE' },
+      { plate: 'TN-19-BS-9549', emt: emtUsers[0], daysAgo: 12, pass: true,  tripType: 'ROUTINE' },
+      { plate: 'TN-19-BX-2772', emt: emtUsers[2], daysAgo: 14, pass: true,  tripType: 'EMERGENCY' },
+      { plate: 'TN-19-BS-9909', emt: emtUsers[1], daysAgo: 16, pass: false, tripType: 'TRANSFER', markedClosed: true },
+      { plate: 'TN-19-AY-0369', emt: emtUsers[0], daysAgo: 20, pass: true,  tripType: 'TRANSFER' },
+      { plate: 'TN-09-AS-6660', emt: emtUsers[2], daysAgo: 25, pass: true,  tripType: 'ROUTINE' },
     ];
 
     const createdAudits = [];

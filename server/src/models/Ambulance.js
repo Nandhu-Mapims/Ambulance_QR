@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const AMBULANCE_TYPES = ['BLS', 'ALS', 'ICU', 'NEONATAL', 'TRANSPORT'];
+const AMBULANCE_TYPES = ['BLS', 'ALS', 'TRANSPORT'];
 
 const ambulanceSchema = new mongoose.Schema(
   {
