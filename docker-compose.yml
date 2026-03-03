@@ -46,13 +46,13 @@ services:
       context: ./client
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: /api
+        VITE_API_URL: http://<server-domain-or-ip>:5010/api
     container_name: ambulance_client
     restart: unless-stopped
     depends_on:
       - server
     ports:
-      - "80:80"
+      - "8085:80"
     networks:
       - app_net
 
