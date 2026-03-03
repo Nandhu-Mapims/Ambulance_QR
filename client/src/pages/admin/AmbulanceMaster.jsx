@@ -43,31 +43,33 @@ function QRModal({ ambulance, qrBase64, onClose }) {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 20, padding: '2rem', maxWidth: 340, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,.25)' }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="qr-modal-title"
+      className="admin-qr-modal-backdrop"
+      onClick={onClose}
+    >
+      <div className="admin-qr-modal" onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
           <div>
-            <h5 style={{ fontWeight: 900, marginBottom: '.25rem' }}>QR Code</h5>
-            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '1.1rem', background: '#1a1a2e', color: '#fff', padding: '.2rem .6rem', borderRadius: 6, boxShadow: '2px 2px 0 #dc2626' }}>
+            <h5 id="qr-modal-title" style={{ fontWeight: 700, marginBottom: '.35rem', color: 'var(--primary-dark)' }}>QR Code</h5>
+            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '1rem', background: 'var(--primary-dark)', color: '#fff', padding: '.25rem .6rem', borderRadius: 'var(--radius-sm)' }}>
               {ambulance.numberPlate}
             </span>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#6b7280', lineHeight: 1 }}>×</button>
+          <button type="button" onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b', lineHeight: 1, padding: '.25rem' }}>×</button>
         </div>
 
         <div className="qr-print-frame">
-          <img src={qrBase64} alt="QR Code" style={{ width: 200, height: 200 }} />
+          <img src={qrBase64} alt={`QR code for ${ambulance.numberPlate}`} style={{ width: 200, height: 200 }} />
         </div>
 
-        <div style={{ display: 'flex', gap: '.75rem', marginTop: '1.25rem' }}>
-          <a href={qrBase64} download={`qr-${ambulance.numberPlate}.png`}
-            style={{ flex: 1, textAlign: 'center', padding: '.6rem', border: '1.5px solid #e5e7eb', borderRadius: 10, color: '#374151', fontWeight: 600, fontSize: '.875rem', textDecoration: 'none', transition: 'all .2s' }}
-            onMouseEnter={(e) => e.target.style.background = '#f9fafb'}
-            onMouseLeave={(e) => e.target.style.background = 'transparent'}
-          >
+        <div className="admin-qr-modal-actions">
+          <a href={qrBase64} download={`qr-${ambulance.numberPlate}.png`} className="admin-qr-modal-download">
             ⬇️ Download
           </a>
-          <button onClick={handlePrint} className="btn-hero" style={{ flex: 1, fontSize: '.875rem' }}>
+          <button type="button" onClick={handlePrint} className="btn-hero admin-qr-modal-print">
             🖨️ Print
           </button>
         </div>
@@ -76,107 +78,93 @@ function QRModal({ ambulance, qrBase64, onClose }) {
   );
 }
 
-/* ── Ambulance card ──────────────────────────────────────────────────────────── */
-function AmbulanceCard({ amb, onRotate, onToggle, onViewQR, rotating }) {
-  const color = TYPE_COLOR[amb.type] || '#6b7280';
+/* ── Table row (list view) ───────────────────────────────────────────────────── */
+function AmbulanceRow({ amb, onRotate, onToggle, onViewQR, rotating }) {
+  const color = TYPE_COLOR[amb.type] ?? '#64748b';
+  const lastRotated = amb.lastQrRotatedAt ? new Date(amb.lastQrRotatedAt).toLocaleDateString('en-GB') : '—';
   return (
-    <div className={`ambulance-card anim-fade-up ${!amb.isActive ? 'opacity-50' : ''}`}
-      style={{ background: '#fff', borderRadius: 10, overflow: 'hidden', border: '1px solid #e8edf3', boxShadow: '0 1px 4px rgba(0,0,0,.06)' }}>
-      {/* Accent bar */}
-      <div style={{ height: 4, background: `linear-gradient(90deg, ${color}, ${color}88)` }} />
-
-      <div style={{ padding: '1rem 1.1rem' }}>
-        {/* Header row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '.75rem' }}>
-          <div>
-            <div style={{
-              fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '1rem', letterSpacing: '.06em',
-              background: '#0f172a', color: '#fff', display: 'inline-block', padding: '.2rem .65rem',
-              borderRadius: 6, boxShadow: `2px 2px 0 ${color}`, marginBottom: '.4rem',
-            }}>
-              {amb.numberPlate}
-            </div>
-            <div style={{ display: 'flex', gap: '.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              <span style={{
-                background: `${color}18`, color, borderRadius: 99,
-                padding: '.18rem .65rem', fontSize: '12px', fontWeight: 700, letterSpacing: '.04em',
-              }}>
-                {TYPE_ICON[amb.type]} {amb.type}
-              </span>
-              {amb.station && (
-                <span style={{
-                  background: '#f1f5f9', color: '#475569', borderRadius: 99,
-                  padding: '.18rem .6rem', fontSize: '12px', fontWeight: 600,
-                }}>
-                  📍 {amb.station}
-                </span>
-              )}
-            </div>
-          </div>
-          <span style={{
-            width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
-            background: amb.isActive ? '#16a34a' : '#9ca3af',
-            display: 'inline-block',
-            boxShadow: amb.isActive ? '0 0 0 3px #bbf7d0' : 'none',
-            marginTop: '.3rem',
-          }} title={amb.isActive ? 'Active' : 'Inactive'} />
-        </div>
-
-        {/* QR info */}
-        <div style={{
-          background: '#f8fafc', borderRadius: 7, padding: '.45rem .75rem',
-          marginBottom: '.75rem', fontSize: '12px', color: '#64748b',
-          border: '1px solid #f1f5f9',
+    <tr className={!amb.isActive ? 'opacity-75' : ''} style={{ transition: 'var(--transition)' }}>
+      <td style={{ padding: '.75rem 1rem', verticalAlign: 'middle' }}>
+        <span style={{
+          fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '.875rem', letterSpacing: '.04em',
+          background: 'var(--primary-dark)', color: '#fff', padding: '.25rem .6rem', borderRadius: 'var(--radius-sm)',
         }}>
-          🔄 QR last rotated: <strong style={{ color: '#475569' }}>
-            {amb.lastQrRotatedAt ? new Date(amb.lastQrRotatedAt).toLocaleDateString('en-GB') : '—'}
-          </strong>
-        </div>
-
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: '.4rem' }}>
+          {amb.numberPlate}
+        </span>
+      </td>
+      <td style={{ padding: '.75rem 1rem', verticalAlign: 'middle' }}>
+        <span style={{
+          background: `${color}18`, color, borderRadius: 99, padding: '.2rem .6rem',
+          fontSize: '.75rem', fontWeight: 700,
+        }}>
+          {TYPE_ICON[amb.type]} {amb.type}
+        </span>
+      </td>
+      <td style={{ padding: '.75rem 1rem', verticalAlign: 'middle', color: 'var(--sidebar-text-dim)', fontSize: '.875rem' }}>
+        {amb.station ?? '—'}
+      </td>
+      <td style={{ padding: '.75rem 1rem', verticalAlign: 'middle' }}>
+        <span
+          role="status"
+          aria-label={amb.isActive ? 'Active' : 'Inactive'}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '.35rem', fontSize: '.8125rem', fontWeight: 600,
+          }}
+        >
+          <span style={{
+            width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+            background: amb.isActive ? '#16a34a' : '#94a3b8',
+            boxShadow: amb.isActive ? '0 0 0 2px rgba(22,163,74,.25)' : 'none',
+          }} />
+          {amb.isActive ? 'Active' : 'Inactive'}
+        </span>
+      </td>
+      <td style={{ padding: '.75rem 1rem', verticalAlign: 'middle', fontSize: '.8125rem', color: 'var(--sidebar-text-dim)' }}>
+        {lastRotated}
+      </td>
+      <td style={{ padding: '.75rem 1rem', verticalAlign: 'middle' }}>
+        <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
           <button
+            type="button"
             onClick={() => onViewQR(amb)}
+            aria-label={`View QR code for ${amb.numberPlate}`}
             style={{
-              flex: 1, padding: '.38rem .5rem', borderRadius: 7,
-              border: `1px solid ${color}55`,
-              background: `${color}0e`, color, fontWeight: 700, fontSize: '13px',
-              cursor: 'pointer', transition: 'all .15s',
+              padding: '.4rem .6rem', borderRadius: 'var(--radius-sm)', fontSize: '.75rem', fontWeight: 600,
+              border: `1px solid ${color}66`, background: `${color}12`, color, cursor: 'pointer', transition: 'var(--transition)',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = `${color}20`; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = `${color}0e`; }}
           >
             📱 QR
           </button>
           <button
+            type="button"
             onClick={() => onRotate(amb)}
             disabled={rotating === amb._id}
+            aria-label={`Rotate QR for ${amb.numberPlate}`}
             style={{
-              flex: 1, padding: '.38rem .5rem', borderRadius: 7,
-              border: '1px solid #e2e8f0',
-              background: '#f8fafc', color: '#374151', fontWeight: 600, fontSize: '13px',
-              cursor: rotating === amb._id ? 'wait' : 'pointer', transition: 'all .15s',
+              padding: '.4rem .6rem', borderRadius: 'var(--radius-sm)', fontSize: '.75rem', fontWeight: 600,
+              border: '1px solid var(--card-border)', background: 'var(--slate-50)', color: 'var(--sidebar-text-dim)',
+              cursor: rotating === amb._id ? 'wait' : 'pointer', transition: 'var(--transition)',
             }}
-            onMouseEnter={(e) => { if (rotating !== amb._id) e.currentTarget.style.background = '#f1f5f9'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
           >
             {rotating === amb._id ? <span className="spinner-border spinner-border-sm" /> : '🔄 Rotate'}
           </button>
           <button
+            type="button"
             onClick={() => onToggle(amb)}
+            aria-label={amb.isActive ? `Deactivate ${amb.numberPlate}` : `Activate ${amb.numberPlate}`}
             style={{
-              flex: 1, padding: '.38rem .5rem', borderRadius: 7,
+              padding: '.4rem .6rem', borderRadius: 'var(--radius-sm)', fontSize: '.75rem', fontWeight: 600,
               border: `1px solid ${amb.isActive ? '#fca5a5' : '#86efac'}`,
-              background: amb.isActive ? '#fff5f5' : '#f0fdf4',
+              background: amb.isActive ? '#fef2f2' : '#f0fdf4',
               color: amb.isActive ? '#dc2626' : '#16a34a',
-              fontWeight: 600, fontSize: '13px', cursor: 'pointer', transition: 'all .15s',
+              cursor: 'pointer', transition: 'var(--transition)',
             }}
           >
             {amb.isActive ? '⏸ Deactivate' : '▶ Activate'}
           </button>
         </div>
-      </div>
-    </div>
+      </td>
+    </tr>
   );
 }
 
@@ -259,37 +247,34 @@ export default function AmbulanceMaster() {
   const filtered = typeFilter ? ambulances.filter((a) => a.type === typeFilter) : ambulances;
   const activeCount = ambulances.filter((a) => a.isActive).length;
 
+  const isEmptyFiltered = filtered.length === 0 && ambulances.length > 0;
+
   return (
-    <div className="page-shell">
-      {/* ── Page heading row ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.85rem' }}>
-        <div>
-          <h2 style={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', marginBottom: '.1rem' }}>Ambulance Master</h2>
-          <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>
+    <div className="page-shell admin-page admin-ambulance">
+      <div className="admin-banner">
+        <div className="admin-banner-inner">
+          <h2 className="admin-banner-title">Ambulance Master</h2>
+          <p className="admin-banner-subtitle">
             {activeCount} active · {ambulances.length - activeCount} inactive · {ambulances.length} total
           </p>
         </div>
-        <button
-          className="btn-hero"
-          onClick={() => setShowForm((v) => !v)}
-        >
+        <button type="button" className="btn-hero admin-banner-cta" onClick={() => setShowForm((v) => !v)}>
           {showForm ? '✕ Cancel' : '+ Register Ambulance'}
         </button>
       </div>
 
       {error && <div className="alert alert-danger rounded-lg mb-4">{error}</div>}
 
-      {/* Register form */}
       {showForm && (
-        <div style={{ background: '#fff', border: '1px solid #e8edf3', borderRadius: 8, padding: '1rem 1.1rem', marginBottom: '.85rem', boxShadow: '0 1px 4px rgba(0,0,0,.05)' }}>
-          <h5 style={{ fontWeight: 700, fontSize: '15px', marginBottom: '1rem', color: '#0f172a' }}>Register New Ambulance</h5>
+        <div className="admin-form-card">
+          <h5 className="admin-form-title">Register New Ambulance</h5>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <div className="row g-2">
+            <div className="row g-2 admin-form-row">
               {[
                 { label: 'Number Plate', name: 'numberPlate', placeholder: 'AMB-001', isUpper: true },
                 { label: 'Station', name: 'station', placeholder: 'e.g. HQ' },
               ].map((f) => (
-                <div key={f.name} className="col-md-4">
+                <div key={f.name} className="col-12 col-md-4">
                   <label style={{ fontWeight: 600, fontSize: '13px', marginBottom: '.3rem', display: 'block', color: '#374151' }}>
                     {f.label} {f.name === 'numberPlate' && <span style={{ color: '#dc2626' }}>*</span>}
                   </label>
@@ -303,7 +288,7 @@ export default function AmbulanceMaster() {
                   {errors[f.name] && <div className="invalid-feedback" style={{ fontSize: '12px' }}>{errors[f.name].message}</div>}
                 </div>
               ))}
-              <div className="col-md-4">
+              <div className="col-12 col-md-4">
                 <label style={{ fontWeight: 600, fontSize: '13px', marginBottom: '.3rem', display: 'block', color: '#374151' }}>
                   Type <span style={{ color: '#dc2626' }}>*</span>
                 </label>
@@ -317,7 +302,7 @@ export default function AmbulanceMaster() {
               </div>
             </div>
             <div className="mt-3">
-              <button type="submit" className="btn-hero" disabled={isSubmitting}>
+              <button type="submit" className="btn-hero admin-submit-btn" disabled={isSubmitting}>
                 {isSubmitting ? <><span className="spinner-border spinner-border-sm me-2" />Creating…</> : '🚑 Register & Generate QR'}
               </button>
             </div>
@@ -325,52 +310,117 @@ export default function AmbulanceMaster() {
         </div>
       )}
 
-      {/* Filter bar */}
-      <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap', alignItems: 'center', marginBottom: '.85rem' }}>
-        <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#94a3b8', marginRight: '.25rem' }}>
-          Filter:
-        </span>
-        {['', 'BLS', 'ALS', 'ICU', 'NEONATAL', 'TRANSPORT'].map((t) => (
-          <button
-            key={t || 'all'}
-            onClick={() => setTypeFilter(t)}
-            style={{
-              padding: '.28rem .8rem', borderRadius: 99, fontSize: '13px', fontWeight: 600,
-              border: '1px solid',
-              borderColor: typeFilter === t ? (TYPE_COLOR[t] || '#4f46e5') : '#e2e8f0',
-              background: typeFilter === t ? (TYPE_COLOR[t] ? `${TYPE_COLOR[t]}15` : '#eef2ff') : '#fff',
-              color: typeFilter === t ? (TYPE_COLOR[t] || '#4f46e5') : '#64748b',
-              cursor: 'pointer', transition: 'all .15s',
-            }}
-          >
-            {t ? `${TYPE_ICON[t]} ${t}` : '🔷 All'}
-          </button>
-        ))}
-        <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#94a3b8', fontWeight: 500 }}>
-          {filtered.length} ambulance{filtered.length !== 1 ? 's' : ''}
-        </span>
+      <div className="admin-filter-bar">
+        <span className="admin-filter-label">Filter:</span>
+        <div className="admin-filter-pills">
+          {['', 'BLS', 'ALS', 'ICU', 'NEONATAL', 'TRANSPORT'].map((t) => {
+            const isActive = typeFilter === t;
+            const pillColor = TYPE_COLOR[t] ?? '#0369a1';
+            return (
+              <button
+                key={t || 'all'}
+                type="button"
+                onClick={() => setTypeFilter(t)}
+                aria-pressed={isActive}
+                aria-label={t ? `Show ${t} ambulances` : 'Show all ambulances'}
+                className="admin-filter-pill"
+                style={{
+                  borderColor: isActive ? pillColor : undefined,
+                  background: isActive ? (t ? `${pillColor}18` : 'var(--primary-light)') : 'var(--card-bg)',
+                  color: isActive ? (t ? pillColor : 'var(--primary-dark)') : 'var(--sidebar-text-dim)',
+                }}
+              >
+                {t ? `${TYPE_ICON[t]} ${t}` : '🔷 All'}
+              </button>
+            );
+          })}
+        </div>
+        <span className="admin-filter-count">{filtered.length} ambulance{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
       {loading ? <Spinner /> : (
         filtered.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">🚑</div>
-            <p>No ambulances found. Register one above.</p>
+            {isEmptyFiltered ? (
+              <>
+                <p>No ambulances in {typeFilter}.</p>
+                <button type="button" className="btn-hero" style={{ marginTop: '.75rem' }} onClick={() => setTypeFilter('')}>
+                  Show all
+                </button>
+              </>
+            ) : (
+              <p>No ambulances found. Register one above.</p>
+            )}
           </div>
         ) : (
-          <div className="row g-3">
-            {filtered.map((amb, i) => (
-              <div key={amb._id} className={`col-md-6 col-lg-4 anim-fade-up anim-delay-${Math.min(i + 1, 5)}`}>
-                <AmbulanceCard
-                  amb={amb}
-                  onRotate={handleRotate}
-                  onToggle={handleToggle}
-                  onViewQR={handleViewQR}
-                  rotating={rotating}
-                />
+          <>
+            <div className="admin-table-card d-none d-md-block">
+            <div className="admin-table-wrap">
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                <table className="table qr-table mb-0" style={{ minWidth: 640 }}>
+                  <thead>
+                    <tr>
+                      <th>Plate</th>
+                      <th>Type</th>
+                      <th>Station</th>
+                      <th>Status</th>
+                      <th>QR last rotated</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody style={{ borderTop: 'none' }}>
+                    {filtered.map((amb) => (
+                      <AmbulanceRow
+                        key={amb._id}
+                        amb={amb}
+                        onRotate={handleRotate}
+                        onToggle={handleToggle}
+                        onViewQR={handleViewQR}
+                        rotating={rotating}
+                      />
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            ))}
-          </div>
+            </div>
+            </div>
+            <div className="admin-table-card d-md-none">
+            <ul className="admin-card-list">
+              {filtered.map((amb) => {
+                const color = TYPE_COLOR[amb.type] ?? '#64748b';
+                const lastRotated = amb.lastQrRotatedAt ? new Date(amb.lastQrRotatedAt).toLocaleDateString('en-GB') : '—';
+                return (
+                  <li key={amb._id} className={`admin-card ${!amb.isActive ? 'admin-card--inactive' : ''}`}>
+                    <div className="admin-card-top">
+                      <span className="admin-card-plate">{amb.numberPlate}</span>
+                      <span className="admin-card-type" style={{ background: `${color}18`, color }}>
+                        {TYPE_ICON[amb.type]} {amb.type}
+                      </span>
+                    </div>
+                    <div className="admin-card-meta">
+                      <span>📍 {amb.station ?? '—'}</span>
+                      <span>{lastRotated}</span>
+                      <span className="admin-card-status" aria-label={amb.isActive ? 'Active' : 'Inactive'}>
+                        <span style={{ background: amb.isActive ? '#16a34a' : '#94a3b8' }} className="admin-card-status-dot" />
+                        {amb.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    <div className="admin-card-actions">
+                      <button type="button" className="admin-card-btn admin-card-btn--qr" onClick={() => handleViewQR(amb)}>📱 QR</button>
+                      <button type="button" className="admin-card-btn" onClick={() => handleRotate(amb)} disabled={rotating === amb._id}>
+                        {rotating === amb._id ? <span className="spinner-border spinner-border-sm" /> : '🔄 Rotate'}
+                      </button>
+                      <button type="button" className="admin-card-btn admin-card-btn--toggle" onClick={() => handleToggle(amb)}>
+                        {amb.isActive ? '⏸ Deactivate' : '▶ Activate'}
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            </div>
+          </>
         )
       )}
 

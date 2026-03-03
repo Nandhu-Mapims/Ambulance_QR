@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Sidebar from './components/Sidebar';
+import MobileBottomNav, { MOBILE_BREAKPOINT } from './components/MobileBottomNav';
 
 // Auth
 import Login from './pages/Login';
@@ -48,11 +49,8 @@ export default function App() {
   );
 }
 
-const MOBILE_BREAKPOINT = 768;
-
 /** Sidebar shell + all protected routes. */
 function AuthedLayout() {
-  const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT);
   const { user } = useAuth();
@@ -71,39 +69,34 @@ function AuthedLayout() {
   /* Redirect unauthenticated users */
   if (!user) return <Navigate to="/login" replace />;
 
-  const sideW = isMobile ? 0 : (collapsed ? 54 : 240);
+  /* Desktop: sidebar always expanded (no shrink). Mobile: overlay only. */
+  const sideW = isMobile ? 0 : 240;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f4f6f9' }} className="app-layout">
+    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh', background: 'var(--slate-50)' }}>
       <Sidebar
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((v) => !v)}
+        collapsed={false}
+        onToggle={() => {}}
         mobileOpen={mobileMenuOpen}
         onMobileClose={() => setMobileMenuOpen(false)}
         isMobile={isMobile}
         onNavClick={() => setMobileMenuOpen(false)}
       />
 
-      <main style={{
-        marginLeft: sideW,
-        flex: 1,
-        minWidth: 0,
-        transition: 'margin-left .22s cubic-bezier(.4,0,.2,1)',
-        display: 'flex',
-        flexDirection: 'column',
-      }} className="app-main">
-        {/* ── Top bar ── */}
-        <header className="app-header" style={{
-          position: 'sticky', top: 0, zIndex: 100,
-          background: '#fff',
-          borderBottom: '1px solid #e8edf3',
-          padding: isMobile ? '0 .75rem' : '0 1.4rem',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          height: 54,
-          boxShadow: '0 1px 3px rgba(0,0,0,.06)',
-        }}>
-          {/* Left: menu button (mobile) + branding */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+      <main
+        className={`app-main ${isMobile ? 'app-main--mobile' : ''}`}
+        style={{
+          marginLeft: sideW,
+          flex: 1,
+          minWidth: 0,
+          transition: 'margin-left .22s cubic-bezier(.4,0,.2,1)',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* Top navigation bar */}
+        <header className="app-header app-navbar">
+          <div className="app-header-left">
             {isMobile && (
               <button
                 type="button"
@@ -111,75 +104,34 @@ function AuthedLayout() {
                 className="sidebar-toggle-mobile"
                 aria-label="Open menu"
               >
-                <span className="sidebar-toggle-mobile-icon">≡</span>
+                <span className="sidebar-toggle-mobile-icon" aria-hidden>≡</span>
               </button>
             )}
-            <div style={{
-              width: 30, height: 30, borderRadius: 7,
-              background: 'linear-gradient(135deg,#1e3a8a,#2563eb)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1rem', flexShrink: 0,
-            }}>🚑</div>
+            <div className="app-header-logo" aria-hidden>🚑</div>
             <div className="app-brand">
-              <div style={{ fontSize: isMobile ? '13px' : '14px', fontWeight: 700, color: '#0f172a', lineHeight: 1.25 }}>
-                Ambulance QR Audit
-              </div>
-              {!isMobile && (
-                <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.2 }}>
-                  Medical Operations Department
-                </div>
-              )}
+              <span className="app-brand-title">Ambulance QR Audit</span>
+              {!isMobile && <span className="app-brand-subtitle">Medical Operations</span>}
             </div>
           </div>
 
-          {/* Right: station + role + user */}
-          <div className="app-header-right" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+          <div className="app-header-right">
             {user?.station && !isMobile && (
-              <span style={{
-                fontSize: '12px', fontWeight: 600,
-                color: '#475569', background: '#f1f5f9',
-                padding: '.2rem .65rem', borderRadius: 6,
-                border: '1px solid #e2e8f0',
-              }}>
-                📍 {user.station}
-              </span>
+              <span className="app-header-station">📍 {user.station}</span>
             )}
             {!isMobile && (
-              <span style={{
-                fontSize: '11px', fontWeight: 700, letterSpacing: '.04em',
-                textTransform: 'uppercase',
-                color: '#4f46e5', background: '#eef2ff',
-                padding: '.2rem .55rem', borderRadius: 5,
-                border: '1px solid #c7d2fe',
-              }}>
-                {user?.role?.replace('_', ' ')}
-              </span>
+              <span className="app-header-role">{user?.role?.replace('_', ' ') ?? ''}</span>
             )}
-            {/* User avatar + name */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '.4rem',
-              background: '#f8faff', border: '1px solid #e2e8f0',
-              padding: '.22rem .7rem .22rem .35rem', borderRadius: 99,
-              cursor: 'default',
-            }}>
-              <div style={{
-                width: 24, height: 24, borderRadius: '50%',
-                background: 'linear-gradient(135deg,#4f46e5,#3b82f6)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '12px', fontWeight: 700, color: '#fff',
-                flexShrink: 0,
-              }}>
-                {user?.name?.charAt(0).toUpperCase()}
-              </div>
-              <span style={{ fontSize: isMobile ? '12px' : '13px', fontWeight: 600, color: '#1e40af' }}>
-                {user?.name}
+            <div className="app-header-user">
+              <span className="app-header-avatar" aria-hidden>
+                {user?.name?.charAt(0).toUpperCase() ?? '?'}
               </span>
+              <span className="app-header-name">{user?.name ?? 'User'}</span>
             </div>
           </div>
         </header>
 
-        {/* ── Page content ── */}
-        <div className="app-content" style={{ flex: 1, padding: isMobile ? '.75rem .85rem' : '1rem 1.25rem', width: '100%', boxSizing: 'border-box' }}>
+        {/* Page content — extra bottom padding on mobile for bottom nav */}
+        <div className={`app-content ${isMobile ? 'app-content--mobile' : ''}`}>
           <Routes>
             <Route path="/audit/:numberPlate"          element={<PR><AuditLanding /></PR>} />
             <Route path="/audit/:numberPlate/fill"     element={<PR roles={['EMT']}><AuditFill /></PR>} />
@@ -198,6 +150,9 @@ function AuthedLayout() {
             <Route path="*"                            element={<Navigate to="/" replace />} />
           </Routes>
         </div>
+
+        {/* Mobile bottom navigation */}
+        <MobileBottomNav isMobile={isMobile} onOpenMenu={() => setMobileMenuOpen(true)} />
       </main>
     </div>
   );

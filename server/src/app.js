@@ -20,11 +20,20 @@ const allowedOrigins = [
   'http://localhost',
   'http://127.0.0.1:5173',
   'http://127.0.0.1',
+  'http://192.168.1.25:5173',
+  'http://192.168.1.248:5173',
 ].filter(Boolean);
+
+const isDev = process.env.NODE_ENV !== 'production';
+
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      if (!origin) return cb(null, true);
+      if (allowedOrigins.includes(origin)) return cb(null, true);
+      if (isDev && /^https?:\/\/(localhost|127\.0\.0\.1|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?$/.test(origin)) {
+        return cb(null, true);
+      }
       cb(null, false);
     },
     credentials: true,

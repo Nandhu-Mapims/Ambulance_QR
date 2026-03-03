@@ -94,76 +94,97 @@ export default function OpenIssues() {
               <p className="text-muted">No open corrective actions. Keep up the good work!</p>
             </div>
           ) : (
-            <div className="row g-3">
-              {sorted.map((action) => {
-                const audit = action.tripAuditId;
-                const openIssues = action.issues.filter((i) => i.status === 'OPEN');
-                const openCount = openIssues.length;
-                const ageColor = ageBadgeColor(action.createdAt);
+            <div style={{
+              background: 'var(--card-bg)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--card-border)',
+              boxShadow: 'var(--shadow-sm)',
+              overflow: 'hidden',
+            }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table qr-table mb-0" style={{ minWidth: 720 }}>
+                  <thead>
+                    <tr>
+                      <th>Ambulance</th>
+                      <th>Type</th>
+                      <th>Open issues</th>
+                      <th>Age</th>
+                      <th>EMT</th>
+                      <th>Submitted</th>
+                      <th>Compliance</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sorted.map((action) => {
+                      const audit = action.tripAuditId;
+                      const openIssues = action.issues.filter((i) => i.status === 'OPEN');
+                      const openCount = openIssues.length;
+                      const ageColor = ageBadgeColor(action.createdAt);
+                      const complianceScore = audit?.complianceScore ?? 0;
+                      const complianceClass = complianceScore >= 80 ? 'success' : complianceScore >= 50 ? 'warning' : 'danger';
 
-                return (
-                  <div key={action._id} className="col-lg-6">
-                    <div className={`card border-0 shadow-sm h-100 border-start border-4 border-${ageColor}`}>
-                      <div className="card-body">
-                        {/* Header row */}
-                        <div className="d-flex justify-content-between align-items-start mb-2">
-                          <div>
-                            <h5 className="fw-bold mb-1 text-danger">{audit?.ambulanceNumberPlate}</h5>
-                            <div className="d-flex gap-1 flex-wrap">
-                              <span className="badge bg-dark">{audit?.ambulanceType}</span>
-                              <span className="badge bg-danger">{openCount} issue{openCount !== 1 ? 's' : ''}</span>
-                              <span className={`badge bg-${ageColor} text-dark`}>
-                                {ageLabel(action.createdAt)}
-                              </span>
+                      return (
+                        <tr key={action._id}>
+                          <td style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>
+                            {audit?.ambulanceNumberPlate ?? '—'}
+                          </td>
+                          <td>
+                            <span className="badge bg-dark" style={{ fontSize: '.75rem' }}>{audit?.ambulanceType ?? '—'}</span>
+                          </td>
+                          <td style={{ maxWidth: 220 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '.2rem' }}>
+                              {openIssues.slice(0, 2).map((issue) => (
+                                <div key={issue.key} style={{ display: 'flex', alignItems: 'center', gap: '.35rem', fontSize: '.8125rem' }}>
+                                  <span className="badge bg-warning text-dark" style={{ fontSize: '.65rem', flexShrink: 0 }}>OPEN</span>
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={issue.issueText}>{issue.issueText}</span>
+                                </div>
+                              ))}
+                              {openCount > 2 && (
+                                <span className="small text-muted">+{openCount - 2} more</span>
+                              )}
                             </div>
-                          </div>
-                          <div className="text-end">
-                            <div className={`fw-bold fs-4 text-${audit?.complianceScore >= 80 ? 'success' : audit?.complianceScore >= 50 ? 'warning' : 'danger'}`}>
-                              {audit?.complianceScore}%
+                          </td>
+                          <td>
+                            <span className={`badge bg-${ageColor} text-dark`} style={{ fontSize: '.75rem' }}>
+                              {ageLabel(action.createdAt)}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: '.8125rem', color: 'var(--sidebar-text-dim)' }}>
+                            {audit?.emtUserId?.name ?? '—'}
+                          </td>
+                          <td style={{ fontSize: '.8125rem', color: 'var(--sidebar-text-dim)' }}>
+                            {audit?.submittedAt ? new Date(audit.submittedAt).toLocaleDateString() : '—'}
+                          </td>
+                          <td>
+                            <span className={`fw-bold text-${complianceClass}`} style={{ fontSize: '.875rem' }}>
+                              {complianceScore}%
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '.35rem', flexWrap: 'wrap' }}>
+                              <Link
+                                to={`/supervisor/actions/${audit?._id}`}
+                                className="btn btn-warning btn-sm fw-semibold"
+                                style={{ fontSize: '.75rem' }}
+                              >
+                                ⚠️ Resolve
+                              </Link>
+                              <Link
+                                to={`/audits/${audit?._id}`}
+                                className="btn btn-outline-secondary btn-sm"
+                                style={{ fontSize: '.75rem' }}
+                              >
+                                View Audit
+                              </Link>
                             </div>
-                            <div className="small text-muted">compliance</div>
-                          </div>
-                        </div>
-
-                        {/* EMT info */}
-                        <p className="text-muted small mb-2">
-                          EMT: <strong>{audit?.emtUserId?.name || '—'}</strong>
-                          &nbsp;·&nbsp;
-                          {audit?.submittedAt ? new Date(audit.submittedAt).toLocaleDateString() : '—'}
-                        </p>
-
-                        {/* Issue list preview */}
-                        <div className="mb-3">
-                          {openIssues.slice(0, 3).map((issue) => (
-                            <div key={issue.key} className="d-flex align-items-start gap-2 mb-1">
-                              <span className="badge bg-warning text-dark flex-shrink-0">OPEN</span>
-                              <span className="small text-truncate">{issue.issueText}</span>
-                            </div>
-                          ))}
-                          {openCount > 3 && (
-                            <span className="small text-muted">+{openCount - 3} more issue{openCount - 3 !== 1 ? 's' : ''}…</span>
-                          )}
-                        </div>
-
-                        <div className="d-flex gap-2">
-                          <Link
-                            to={`/supervisor/actions/${audit?._id}`}
-                            className="btn btn-warning btn-sm fw-semibold"
-                          >
-                            ⚠️ Resolve Issues
-                          </Link>
-                          <Link
-                            to={`/audits/${audit?._id}`}
-                            className="btn btn-outline-secondary btn-sm"
-                          >
-                            View Audit
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </>

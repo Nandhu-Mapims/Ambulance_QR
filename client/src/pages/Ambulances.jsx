@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../api/axios';
+import api, { getServerRoot } from '../api/axios';
 
 const STATUS_COLOR = {
   available: 'success',
@@ -10,7 +10,7 @@ const STATUS_COLOR = {
   offline: 'secondary',
 };
 
-const SERVER_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+const SERVER_URL = getServerRoot();
 
 export default function Ambulances() {
   const { isAuthorized } = useAuth();

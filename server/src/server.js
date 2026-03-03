@@ -10,7 +10,7 @@ const start = async () => {
   // Connect to MongoDB before accepting traffic
   await connectDB();
 
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT, "0.0.0.0", () => {
     logger.info(
       `🚑  Server listening on port ${PORT}  [${process.env.NODE_ENV || 'development'}]`
     );

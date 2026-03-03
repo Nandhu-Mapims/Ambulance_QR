@@ -10,12 +10,13 @@ import { useToast } from '../../context/ToastContext';
 const TYPES = ['BLS', 'ALS', 'ICU', 'NEONATAL', 'TRANSPORT'];
 const Q_TYPES = ['YESNO', 'TEXT', 'NUMBER', 'DROPDOWN', 'DATE', 'PHOTO'];
 
+/* Hospital theme: single cohesive palette (blue/slate) — no rainbow pastels */
 const TYPE_META = {
-  BLS:       { color: '#2563eb', bg: '#eff6ff', emoji: '🟦', label: 'Basic Life Support' },
-  ALS:       { color: '#7c3aed', bg: '#f5f3ff', emoji: '🟣', label: 'Advanced Life Support' },
-  ICU:       { color: '#dc2626', bg: '#fef2f2', emoji: '🔴', label: 'Intensive Care Unit' },
-  NEONATAL:  { color: '#d97706', bg: '#fffbeb', emoji: '🟡', label: 'Neonatal Transport' },
-  TRANSPORT: { color: '#059669', bg: '#f0fdf4', emoji: '🟢', label: 'Patient Transport' },
+  BLS:       { color: '#0369a1', bg: '#e0f2fe', label: 'Basic Life Support' },
+  ALS:       { color: '#0369a1', bg: '#e0f2fe', label: 'Advanced Life Support' },
+  ICU:       { color: '#0369a1', bg: '#e0f2fe', label: 'Intensive Care Unit' },
+  NEONATAL:  { color: '#0369a1', bg: '#e0f2fe', label: 'Neonatal Transport' },
+  TRANSPORT: { color: '#0369a1', bg: '#e0f2fe', label: 'Patient Transport' },
 };
 
 const Q_META = {
@@ -63,21 +64,21 @@ function StepBar({ step, steps }) {
             <div style={{
               display: 'flex', alignItems: 'center', gap: '.5rem',
               padding: '.45rem .85rem', borderRadius: 99, flexShrink: 0,
-              background: current ? '#1d4ed8' : done ? '#f0fdf4' : '#f3f4f6',
-              border: `1.5px solid ${current ? '#1d4ed8' : done ? '#16a34a' : '#e5e7eb'}`,
-              transition: 'all .25s',
+              background: current ? 'var(--sidebar-active-bg)' : done ? '#ecfdf5' : 'var(--slate-100)',
+              border: `1px solid ${current ? 'var(--sidebar-active-bg)' : done ? '#a7f3d0' : 'var(--card-border)'}`,
+              transition: 'var(--transition)',
             }}>
               <span style={{
                 width: 22, height: 22, borderRadius: '50%',
-                background: current ? 'rgba(255,255,255,.25)' : done ? '#16a34a' : '#d1d5db',
+                background: current ? 'rgba(255,255,255,.25)' : done ? '#059669' : '#cbd5e1',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '.7rem', fontWeight: 900, color: current ? '#fff' : done ? '#fff' : '#6b7280',
+                fontSize: '.7rem', fontWeight: 700, color: current ? '#fff' : done ? '#fff' : '#64748b',
               }}>
                 {done ? '✓' : i + 1}
               </span>
               <span style={{
-                fontSize: '.8rem', fontWeight: 700,
-                color: current ? '#fff' : done ? '#16a34a' : '#6b7280',
+                fontSize: '.8rem', fontWeight: 600,
+                color: current ? '#fff' : done ? '#047857' : '#475569',
                 whiteSpace: 'nowrap',
               }}>
                 {s.label}
@@ -86,8 +87,8 @@ function StepBar({ step, steps }) {
             {i < steps.length - 1 && (
               <div style={{
                 flex: 1, height: 2,
-                background: done ? '#16a34a' : '#e5e7eb',
-                margin: '0 .25rem', transition: 'background .25s',
+                background: done ? '#a7f3d0' : 'var(--card-border)',
+                margin: '0 .25rem', transition: 'background .2s',
               }} />
             )}
           </div>
@@ -104,7 +105,7 @@ function Step1({ register, errors, watch, setValue, editTemplate }) {
   const selected = watch('ambulanceType');
 
   return (
-    <div style={{ maxWidth: 680 }}>
+    <div className="admin-step1" style={{ maxWidth: 680 }}>
       <h5 style={{ fontWeight: 800, marginBottom: '.35rem' }}>Template Info</h5>
       <p style={{ color: '#6b7280', fontSize: '.9rem', marginBottom: '1.75rem' }}>
         Choose the ambulance type this template applies to, then give it a name.
@@ -125,16 +126,14 @@ function Step1({ register, errors, watch, setValue, editTemplate }) {
                 type="button"
                 onClick={() => setValue('ambulanceType', t, { shouldValidate: true })}
                 style={{
-                  padding: '1rem .75rem', borderRadius: 14, textAlign: 'center', cursor: 'pointer',
-                  background: active ? m.color : m.bg,
-                  border: `2px solid ${active ? m.color : 'transparent'}`,
-                  boxShadow: active ? `0 4px 16px ${m.color}33` : '0 1px 4px rgba(0,0,0,.06)',
-                  transition: 'all .2s', outline: 'none',
+                  padding: '1rem .75rem', borderRadius: 12, textAlign: 'center', cursor: 'pointer',
+                  background: active ? 'var(--sidebar-active-bg)' : 'var(--blue-50)',
+                  border: `1px solid ${active ? 'var(--sidebar-active-bg)' : 'var(--blue-100)'}`,
+                  boxShadow: 'var(--shadow-sm)', transition: 'var(--transition)', outline: 'none',
                 }}
               >
-                <div style={{ fontSize: '1.6rem', marginBottom: '.35rem' }}>{m.emoji}</div>
-                <div style={{ fontWeight: 800, fontSize: '.8rem', color: active ? '#fff' : m.color }}>{t}</div>
-                <div style={{ fontSize: '.7rem', color: active ? 'rgba(255,255,255,.8)' : '#9ca3af', marginTop: '.2rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '.9rem', color: active ? '#fff' : 'var(--primary)', marginBottom: '.25rem' }}>{t}</div>
+                <div style={{ fontSize: '.7rem', color: active ? 'rgba(255,255,255,.85)' : '#64748b' }}>
                   {m.label}
                 </div>
               </button>
@@ -148,8 +147,7 @@ function Step1({ register, errors, watch, setValue, editTemplate }) {
         )}
       </div>
 
-      {/* Name & Version */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+      <div className="admin-step1-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
         <div>
           <label style={{ fontWeight: 700, fontSize: '.85rem', display: 'block', marginBottom: '.4rem' }}>
             Template Name <span style={{ color: '#dc2626' }}>*</span>
@@ -287,46 +285,32 @@ function QuestionCard({ index, total, field, control, register, remove, move, er
               {err?.key && <div className="invalid-feedback" style={{ fontSize: '.72rem' }}>{err.key.message}</div>}
               <div style={{ fontSize: '.7rem', color: '#9ca3af', marginTop: '.2rem' }}>Lowercase + underscores</div>
             </div>
-            {/* Type picker */}
+            {/* Question type — single clear dropdown with friendly labels */}
             <div>
-              <label style={{ fontSize: '.78rem', fontWeight: 700, color: '#374151', display: 'block', marginBottom: '.3rem' }}>
-                Question Type <span style={{ color: '#dc2626' }}>*</span>
+              <label style={{ fontSize: '.85rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '.4rem' }}>
+                Question type <span style={{ color: '#dc2626' }}>*</span>
               </label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.35rem' }}>
-                {Q_TYPES.map((t) => {
-                  const tm = Q_META[t];
-                  const active = qType === t;
-                  return (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => {
-                        /* manually set value via register path */
-                        const input = document.querySelector(`[name="questions.${index}.type"]`);
-                        if (input) { input.value = t; input.dispatchEvent(new Event('change', { bubbles: true })); }
-                      }}
-                      title={tm.desc}
-                      style={{
-                        padding: '.22rem .55rem', borderRadius: 7,
-                        border: `1.5px solid ${active ? tm.color : '#e5e7eb'}`,
-                        background: active ? tm.color : '#f9fafb',
-                        color: active ? '#fff' : '#374151',
-                        fontSize: '.72rem', fontWeight: 700, cursor: 'pointer',
-                        transition: 'all .15s', display: 'flex', alignItems: 'center', gap: '.25rem',
-                      }}
-                    >
-                      <span>{tm.emoji}</span> {t}
-                    </button>
-                  );
-                })}
-              </div>
               <select
-                style={{ display: 'none' }}
+                className={`form-select form-select-md ${err?.type ? 'is-invalid' : ''}`}
                 {...register(`questions.${index}.type`)}
+                style={{
+                  maxWidth: 280,
+                  padding: '.5rem .75rem',
+                  fontSize: '.9rem',
+                  border: '1px solid var(--card-border)',
+                  borderRadius: 8,
+                }}
               >
-                {Q_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                {Q_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {Q_META[t].label}
+                  </option>
+                ))}
               </select>
-              {err?.type && <div style={{ color: '#dc2626', fontSize: '.72rem', marginTop: '.25rem' }}>{err.type.message}</div>}
+              <div style={{ fontSize: '.75rem', color: '#6b7280', marginTop: '.25rem' }}>
+                {Q_META[qType]?.desc}
+              </div>
+              {err?.type && <div style={{ color: '#dc2626', fontSize: '.75rem', marginTop: '.25rem' }}>{err.type.message}</div>}
             </div>
           </div>
 
@@ -369,7 +353,7 @@ function QuestionCard({ index, total, field, control, register, remove, move, er
               cursor: 'pointer', fontSize: '.8rem', fontWeight: 600, userSelect: 'none',
             }}>
               <input type="checkbox" className="form-check-input m-0" {...register(`questions.${index}.required`)} />
-              Required question
+              Mandatory
             </label>
 
             {qType === 'YESNO' && (
@@ -380,7 +364,7 @@ function QuestionCard({ index, total, field, control, register, remove, move, er
                 cursor: 'pointer', fontSize: '.8rem', fontWeight: 600, userSelect: 'none',
               }}>
                 <input type="checkbox" className="form-check-input m-0" {...register(`questions.${index}.requiresEvidenceIfNo`)} />
-                📷 Require evidence if NO
+                Evidence mandatory when answer is No
               </label>
             )}
           </div>
@@ -391,28 +375,72 @@ function QuestionCard({ index, total, field, control, register, remove, move, er
 }
 
 function Step2({ fields, control, register, errors, append, remove, move }) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
   const addQuestion = (type) => {
+    const nextIndex = fields.length;
     append({ key: '', label: '', type, required: true, requiresEvidenceIfNo: false, options: '' });
+    setSelectedIndex(nextIndex);
+  };
+
+  // Keep selected index in bounds as questions are added/removed
+  useEffect(() => {
+    if (!fields.length) {
+      setSelectedIndex(0);
+    } else if (selectedIndex > fields.length - 1) {
+      setSelectedIndex(fields.length - 1);
+    }
+  }, [fields.length, selectedIndex]);
+
+  const handleRemove = (index) => {
+    remove(index);
+    setSelectedIndex((prev) => {
+      if (fields.length <= 1) return 0;
+      if (prev > index) return prev - 1;
+      return Math.max(0, prev - 1);
+    });
+  };
+
+  const handleMove = (from, to) => {
+    move(from, to);
+    setSelectedIndex((prev) => {
+      if (prev === from) return to;
+      return prev;
+    });
   };
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h5 style={{ fontWeight: 800, marginBottom: '.25rem' }}>Build Questions</h5>
           <p style={{ color: '#6b7280', fontSize: '.9rem', margin: 0 }}>
             Add and arrange checklist items. <strong>{fields.length}</strong> question{fields.length !== 1 ? 's' : ''} so far.
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => addQuestion('YESNO')}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '.5rem',
+            padding: '.5rem 1rem', borderRadius: 10,
+            background: 'var(--sidebar-active-bg)', color: '#fff',
+            border: 'none', fontWeight: 600, fontSize: '.9rem', cursor: 'pointer',
+            boxShadow: 'var(--shadow-sm)', transition: 'var(--transition)',
+          }}
+        >
+          <span style={{ fontSize: '1.1rem', lineHeight: 1, fontWeight: 700 }}>+</span>
+          Add question
+        </button>
       </div>
 
       {/* Quick-add type buttons */}
       <div style={{
-        background: '#f8fafc', border: '1.5px dashed #cbd5e1',
-        borderRadius: 14, padding: '1rem 1.25rem', marginBottom: '1.25rem',
+        background: 'var(--slate-50)', border: '1px dashed var(--card-border)',
+        borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1.25rem',
       }}>
-        <div style={{ fontSize: '.78rem', fontWeight: 700, color: '#6b7280', marginBottom: '.6rem', letterSpacing: '.08em', textTransform: 'uppercase' }}>
-          Quick Add
+        <div style={{ fontSize: '.78rem', fontWeight: 600, color: '#64748b', marginBottom: '.6rem', letterSpacing: '.05em', textTransform: 'uppercase' }}>
+          Or add by type
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.5rem' }}>
           {Q_TYPES.map((t) => {
@@ -429,8 +457,6 @@ function Step2({ fields, control, register, errors, append, remove, move }) {
                   fontWeight: 700, fontSize: '.8rem', cursor: 'pointer',
                   transition: 'all .18s', display: 'flex', alignItems: 'center', gap: '.35rem',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = m.color; e.currentTarget.style.color = '#fff'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = m.bg; e.currentTarget.style.color = m.color; }}
               >
                 <span>{m.emoji}</span>
                 {m.label}
@@ -452,25 +478,117 @@ function Step2({ fields, control, register, errors, append, remove, move }) {
       {fields.length === 0 ? (
         <div style={{
           textAlign: 'center', padding: '3rem 1rem',
-          background: '#f8fafc', borderRadius: 14, border: '1.5px dashed #e2e8f0',
+          background: 'var(--slate-50)', borderRadius: 14, border: '1.5px dashed var(--card-border)',
         }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '.75rem' }}>📋</div>
-          <p style={{ color: '#9ca3af', fontWeight: 600 }}>No questions yet. Use Quick Add above to start.</p>
+          <p style={{ color: '#64748b', fontWeight: 600, marginBottom: '1rem' }}>No questions yet. Click below to add one.</p>
+          <button
+            type="button"
+            onClick={() => addQuestion('YESNO')}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '.5rem',
+              padding: '.6rem 1.25rem', borderRadius: 10,
+              background: 'var(--sidebar-active-bg)', color: '#fff',
+              border: 'none', fontWeight: 600, fontSize: '.95rem', cursor: 'pointer',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            <span style={{ fontSize: '1.25rem', lineHeight: 1, fontWeight: 700 }}>+</span>
+            Add first question
+          </button>
         </div>
       ) : (
-        fields.map((field, index) => (
-          <QuestionCard
-            key={field.id}
-            index={index}
-            total={fields.length}
-            field={field}
-            control={control}
-            register={register}
-            errors={errors}
-            remove={remove}
-            move={move}
-          />
-        ))
+        <div className="admin-step2-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(220px,260px) minmax(0,1fr)', gap: '1.25rem' }}>
+          {/* Left: compact question list for quick navigation */}
+          <div style={{
+            background: 'var(--card-bg)',
+            borderRadius: 12,
+            border: '1px solid var(--card-border)',
+            boxShadow: 'var(--shadow-sm)',
+            padding: '.75rem .6rem',
+          }}>
+            {fields.map((q, index) => {
+              const active = index === selectedIndex;
+              return (
+                <button
+                  key={q.id}
+                  type="button"
+                  onClick={() => setSelectedIndex(index)}
+                  style={{
+                    width: '100%', textAlign: 'left',
+                    border: 'none', background: active ? 'var(--blue-50)' : 'transparent',
+                    borderRadius: 8, padding: '.4rem .55rem',
+                    marginBottom: '.25rem', cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                    <span style={{
+                      width: 20, height: 20, borderRadius: '50%',
+                      background: active ? 'var(--primary)' : '#e5e7eb',
+                      color: active ? '#fff' : '#4b5563',
+                      fontSize: '.7rem', fontWeight: 700,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {index + 1}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontSize: '.78rem', fontWeight: 600,
+                        color: active ? '#0f172a' : '#4b5563',
+                        overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+                      }}>
+                        {q.label || 'Untitled question'}
+                      </div>
+                      <div style={{ fontSize: '.7rem', color: '#9ca3af' }}>
+                        {q.type} {q.required ? '• Mandatory' : ''}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => addQuestion('YESNO')}
+              style={{
+                width: '100%',
+                marginTop: '.5rem',
+                padding: '.4rem .55rem',
+                borderRadius: 8,
+                border: '1px dashed var(--primary)',
+                background: 'transparent',
+                fontSize: '.8rem',
+                fontWeight: 600,
+                color: 'var(--primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '.35rem',
+                cursor: 'pointer',
+              }}
+            >
+              <span style={{ fontSize: '1rem', lineHeight: 1 }}>+</span>
+              Add question
+            </button>
+          </div>
+
+          {/* Right: detailed editor for selected question */}
+          <div>
+            {fields[selectedIndex] && (
+              <QuestionCard
+                key={fields[selectedIndex].id}
+                index={selectedIndex}
+                total={fields.length}
+                field={fields[selectedIndex]}
+                control={control}
+                register={register}
+                errors={errors}
+                remove={handleRemove}
+                move={handleMove}
+              />
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -494,32 +612,35 @@ function Step3({ watch }) {
         Preview how EMTs will see this checklist. Confirm details then save.
       </p>
 
-      {/* Summary stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem', marginBottom: '1.75rem' }}>
+      <div className="admin-step3-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem', marginBottom: '1.75rem' }}>
         {[
-          { label: 'Total Questions', value: questions.length, color: '#2563eb', bg: '#eff6ff', emoji: '❓' },
-          { label: 'Required',        value: required,         color: '#16a34a', bg: '#f0fdf4', emoji: '⚡' },
-          { label: 'Yes/No',          value: yesno,            color: '#7c3aed', bg: '#f5f3ff', emoji: '✅' },
-          { label: 'Need Evidence',   value: evidence,         color: '#d97706', bg: '#fffbeb', emoji: '📷' },
+          { label: 'Total Questions', value: questions.length, color: 'var(--primary)' },
+          { label: 'Mandatory',       value: required,         color: '#047857' },
+          { label: 'Yes/No',          value: yesno,            color: 'var(--primary)' },
+          { label: 'Need Evidence',   value: evidence,         color: '#b45309' },
         ].map((s) => (
           <div key={s.label} style={{
-            background: s.bg, border: `1.5px solid ${s.color}33`,
-            borderRadius: 12, padding: '.85rem 1rem', textAlign: 'center',
+            background: 'var(--card-bg)', border: '1px solid var(--card-border)',
+            borderRadius: 12, padding: '.85rem 1rem', textAlign: 'center', boxShadow: 'var(--shadow-sm)',
           }}>
-            <div style={{ fontSize: '1.5rem' }}>{s.emoji}</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</div>
-            <div style={{ fontSize: '.73rem', color: '#6b7280', fontWeight: 600, marginTop: '.2rem' }}>{s.label}</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</div>
+            <div style={{ fontSize: '.75rem', color: '#64748b', fontWeight: 600, marginTop: '.25rem' }}>{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Template meta */}
       <div style={{
-        background: tm.bg || '#f3f4f6', border: `1.5px solid ${tm.color || '#e5e7eb'}33`,
-        borderRadius: 14, padding: '1rem 1.25rem', marginBottom: '1.25rem',
+        background: tm.bg || 'var(--slate-100)', border: `1px solid var(--card-border)`,
+        borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1.25rem',
         display: 'flex', alignItems: 'center', gap: '1rem',
       }}>
-        <span style={{ fontSize: '2rem' }}>{tm.emoji || '📋'}</span>
+        <span style={{
+          width: 48, height: 48, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'var(--blue-50)', color: 'var(--primary)', fontWeight: 700, fontSize: '1rem',
+        }}>
+          {ambulanceType?.slice(0, 2) ?? '—'}
+        </span>
         <div>
           <div style={{ fontWeight: 800, fontSize: '1rem', color: '#111' }}>{name || '—'}</div>
           <div style={{ fontSize: '.8rem', color: '#6b7280' }}>
@@ -568,7 +689,7 @@ function Step3({ watch }) {
                       </span>
                       <span style={{ fontSize: '.75rem', fontWeight: 700, color: qm.color }}>{qm.emoji} {q.type}</span>
                       {q.required && (
-                        <span style={{ fontSize: '.68rem', color: '#dc2626', fontWeight: 700, marginLeft: 'auto' }}>* Required</span>
+                        <span style={{ fontSize: '.68rem', color: '#dc2626', fontWeight: 700, marginLeft: 'auto' }}>* Mandatory</span>
                       )}
                     </div>
                     <div style={{ fontWeight: 600, fontSize: '.9rem', color: '#111', marginBottom: '.5rem' }}>
@@ -579,7 +700,7 @@ function Step3({ watch }) {
                       <div style={{ display: 'flex', gap: '.5rem' }}>
                         <span style={{ padding: '.25rem .9rem', borderRadius: 8, border: '1.5px solid #16a34a', color: '#16a34a', fontSize: '.8rem', fontWeight: 700, background: '#f0fdf4' }}>YES</span>
                         <span style={{ padding: '.25rem .9rem', borderRadius: 8, border: '1.5px solid #e5e7eb', color: '#6b7280', fontSize: '.8rem', fontWeight: 700 }}>NO</span>
-                        {q.requiresEvidenceIfNo && <span style={{ fontSize: '.72rem', color: '#d97706', alignSelf: 'center' }}>📷 photo required if NO</span>}
+                        {q.requiresEvidenceIfNo && <span style={{ fontSize: '.72rem', color: '#d97706', alignSelf: 'center' }}>Evidence mandatory if NO</span>}
                       </div>
                     )}
                     {q.type === 'TEXT' && (
@@ -624,7 +745,7 @@ const STEPS = [
   { label: 'Review & Publish' },
 ];
 
-function TemplateWizard({ editTemplate, onSuccess, onCancel }) {
+function TemplateWizard({ editTemplate, onSuccess, onCancel, initialType, initialVersion }) {
   const toast = useToast();
   const [step, setStep] = useState(0);
 
@@ -641,7 +762,8 @@ function TemplateWizard({ editTemplate, onSuccess, onCancel }) {
           })),
         }
       : {
-          version: 1,
+          ambulanceType: initialType || '',
+          version: typeof initialVersion === 'number' && initialVersion > 0 ? initialVersion : 1,
           questions: [{ key: '', label: '', type: 'YESNO', required: true, requiresEvidenceIfNo: false }],
         },
   });
@@ -686,18 +808,8 @@ function TemplateWizard({ editTemplate, onSuccess, onCancel }) {
   };
 
   return (
-    <div style={{
-      background: '#fff', borderRadius: 20,
-      border: '1.5px solid #e5e7eb',
-      boxShadow: '0 8px 40px rgba(0,0,0,.08)',
-      marginBottom: '2rem', overflow: 'hidden',
-    }}>
-      {/* Wizard header */}
-      <div style={{
-        padding: '1.25rem 1.75rem',
-        background: 'linear-gradient(135deg, #0c1445, #1d4ed8)',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      }}>
+    <div className="admin-wizard">
+      <div className="admin-wizard-header">
         <div>
           <div style={{ color: 'rgba(255,255,255,.6)', fontSize: '.78rem', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: '.2rem' }}>
             {editTemplate ? 'Edit Template' : 'New Template'}
@@ -719,9 +831,10 @@ function TemplateWizard({ editTemplate, onSuccess, onCancel }) {
         </button>
       </div>
 
-      {/* Body */}
-      <div style={{ padding: '1.75rem' }}>
-        <StepBar step={step} steps={STEPS} />
+      <div className="admin-wizard-body">
+        <div className="admin-wizard-stepbar">
+          <StepBar step={step} steps={STEPS} />
+        </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           {step === 0 && (
@@ -804,114 +917,82 @@ function TemplateWizard({ editTemplate, onSuccess, onCancel }) {
 ═══════════════════════════════════════════════════════════════════════════ */
 function TemplateCard({ tpl, onActivate, onEdit }) {
   const [expanded, setExpanded] = useState(false);
-  const m = TYPE_META[tpl.ambulanceType] || {};
 
   return (
-    <div style={{
-      background: '#fff', borderRadius: 16,
-      border: `1.5px solid ${tpl.isActive ? m.color + '44' : '#e5e7eb'}`,
-      boxShadow: tpl.isActive ? `0 4px 20px ${m.color || '#000'}1a` : '0 1px 6px rgba(0,0,0,.05)',
-      marginBottom: '.75rem', overflow: 'hidden', transition: 'all .22s',
-    }}>
-      <div style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        {/* Type badge */}
+    <div className={`admin-template-card ${tpl.isActive ? 'admin-template-card--active' : ''}`}>
+      <div className="admin-template-card-inner">
         <div style={{
-          width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-          background: m.bg || '#f3f4f6',
+          width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+          background: 'var(--blue-50)', border: '1px solid var(--blue-100)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '1.5rem', border: `1.5px solid ${m.color || '#e5e7eb'}33`,
+          fontSize: '1rem', fontWeight: 700, color: 'var(--primary)',
         }}>
-          {m.emoji || '📋'}
+          {tpl.ambulanceType.slice(0, 2)}
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '.25rem', flexWrap: 'wrap' }}>
-            <span style={{ fontWeight: 800, fontSize: '.95rem', color: '#111' }}>{tpl.name}</span>
+            <span style={{ fontWeight: 700, fontSize: '.95rem', color: '#0f172a' }}>{tpl.name}</span>
             {tpl.isActive && (
               <span style={{
-                background: '#f0fdf4', border: '1px solid #86efac', color: '#16a34a',
-                fontSize: '.68rem', fontWeight: 700, padding: '.15rem .5rem', borderRadius: 99,
+                background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857',
+                fontSize: '.68rem', fontWeight: 600, padding: '.15rem .5rem', borderRadius: 99,
               }}>
-                ● Active
+                Active
               </span>
             )}
           </div>
           <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
-            <span style={{ background: m.bg, color: m.color, fontWeight: 700, fontSize: '.72rem', padding: '.12rem .5rem', borderRadius: 99, border: `1px solid ${m.color}33` }}>
+            <span style={{ background: 'var(--blue-50)', color: 'var(--primary)', fontWeight: 600, fontSize: '.72rem', padding: '.12rem .5rem', borderRadius: 99 }}>
               {tpl.ambulanceType}
             </span>
-            <span style={{ background: '#f3f4f6', color: '#6b7280', fontWeight: 700, fontSize: '.72rem', padding: '.12rem .5rem', borderRadius: 99 }}>
+            <span style={{ background: 'var(--slate-100)', color: '#475569', fontWeight: 600, fontSize: '.72rem', padding: '.12rem .5rem', borderRadius: 99 }}>
               v{tpl.version}
             </span>
-            <span style={{ background: '#eff6ff', color: '#2563eb', fontWeight: 700, fontSize: '.72rem', padding: '.12rem .5rem', borderRadius: 99 }}>
+            <span style={{ background: 'var(--slate-100)', color: '#475569', fontWeight: 600, fontSize: '.72rem', padding: '.12rem .5rem', borderRadius: 99 }}>
               {tpl.questions?.length} questions
             </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '.5rem', flexShrink: 0 }}>
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            style={{
-              padding: '.35rem .75rem', borderRadius: 8, border: '1.5px solid #e5e7eb',
-              background: '#f9fafb', fontWeight: 700, fontSize: '.78rem',
-              cursor: 'pointer', color: '#374151',
-            }}
-          >
+        <div className="admin-template-card-actions">
+          <button type="button" className="admin-template-card-btn admin-template-card-btn--preview" onClick={() => setExpanded((v) => !v)}>
             {expanded ? '▲ Hide' : '▼ Preview'}
           </button>
-          <button
-            onClick={() => onEdit(tpl)}
-            style={{
-              padding: '.35rem .75rem', borderRadius: 8, border: '1.5px solid #dbeafe',
-              background: '#eff6ff', fontWeight: 700, fontSize: '.78rem',
-              cursor: 'pointer', color: '#2563eb',
-            }}
-          >
-            ✏️ Edit
+          <button type="button" className="admin-template-card-btn admin-template-card-btn--edit" onClick={() => onEdit(tpl)}>
+            Edit
           </button>
           {!tpl.isActive && (
-            <button
-              onClick={() => onActivate(tpl._id)}
-              style={{
-                padding: '.35rem .75rem', borderRadius: 8, border: '1.5px solid #86efac',
-                background: '#f0fdf4', fontWeight: 700, fontSize: '.78rem',
-                cursor: 'pointer', color: '#16a34a',
-              }}
-            >
-              ✓ Activate
+            <button type="button" className="admin-template-card-btn admin-template-card-btn--activate" onClick={() => onActivate(tpl._id)}>
+              Activate
             </button>
           )}
         </div>
       </div>
 
       {expanded && (
-        <div style={{ borderTop: '1px solid #f3f4f6', padding: '1rem 1.25rem', background: '#fafafa' }}>
+        <div style={{ borderTop: '1px solid var(--card-border)', padding: '1rem 1.25rem', background: 'var(--slate-50)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '.5rem' }}>
-            {tpl.questions?.map((q, i) => {
-              const qm = Q_META[q.type] || Q_META.YESNO;
-              return (
-                <div key={q.key} style={{
-                  background: '#fff', border: '1.5px solid #e5e7eb',
-                  borderRadius: 10, padding: '.6rem .85rem',
-                  display: 'flex', alignItems: 'flex-start', gap: '.5rem',
-                  borderLeft: `3px solid ${qm.color}`,
-                }}>
-                  <span style={{ fontWeight: 800, fontSize: '.7rem', color: '#9ca3af', flexShrink: 0, marginTop: '.1rem' }}>#{i + 1}</span>
-                  <span style={{ fontSize: '.9rem', flexShrink: 0 }}>{qm.emoji}</span>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: '.82rem', color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {q.label}
-                    </div>
-                    <div style={{ fontSize: '.7rem', color: '#9ca3af', fontFamily: 'var(--font-mono)', marginTop: '.1rem' }}>
-                      {q.key}
-                      {q.required && <span style={{ color: '#dc2626', marginLeft: '.25rem' }}>*</span>}
-                      {q.requiresEvidenceIfNo && <span style={{ color: '#d97706', marginLeft: '.3rem' }}>📷</span>}
-                    </div>
+            {tpl.questions?.map((q, i) => (
+              <div key={q.key} style={{
+                background: 'var(--card-bg)', border: '1px solid var(--card-border)',
+                borderRadius: 8, padding: '.6rem .85rem',
+                display: 'flex', alignItems: 'flex-start', gap: '.5rem',
+                borderLeft: '3px solid var(--primary)',
+              }}>
+                <span style={{ fontWeight: 700, fontSize: '.7rem', color: '#64748b', flexShrink: 0, marginTop: '.1rem' }}>#{i + 1}</span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '.82rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {q.label}
+                  </div>
+                  <div style={{ fontSize: '.7rem', color: '#64748b', fontFamily: 'var(--font-mono)', marginTop: '.1rem' }}>
+                    {q.key}
+                    {q.required && <span style={{ color: '#dc2626', marginLeft: '.25rem' }}>*</span>}
+                    {q.requiresEvidenceIfNo && <span style={{ color: '#b45309', marginLeft: '.3rem' }}>📷</span>}
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -929,6 +1010,8 @@ export default function TemplateBuilder() {
   const [showForm, setShowForm] = useState(false);
   const [editTemplate, setEditTemplate] = useState(null);
   const [typeFilter, setTypeFilter] = useState('');
+  const [initialType, setInitialType] = useState('');
+  const [initialVersion, setInitialVersion] = useState(1);
 
   const fetchTemplates = useCallback(() =>
     api.get('/templates')
@@ -951,6 +1034,21 @@ export default function TemplateBuilder() {
 
   const handleEdit = (tpl) => {
     setEditTemplate(tpl);
+    setInitialType('');
+    setInitialVersion(tpl.version + 1);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNewTemplate = () => {
+    // Pick a sensible default type: current filter, otherwise any existing, otherwise BLS
+    const baseType = typeFilter || templates[0]?.ambulanceType || 'BLS';
+    const existingForType = templates.filter((t) => t.ambulanceType === baseType);
+    const maxVersion = existingForType.reduce((max, t) => (t.version > max ? t.version : max), 0);
+
+    setEditTemplate(null);
+    setInitialType(baseType);
+    setInitialVersion(maxVersion > 0 ? maxVersion + 1 : 1);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -964,49 +1062,45 @@ export default function TemplateBuilder() {
   const filtered = typeFilter ? templates.filter((t) => t.ambulanceType === typeFilter) : templates;
 
   return (
-    <div>
-      {/* Page banner */}
-      <div className="page-banner anim-fade-up" style={{ marginBottom: '1.75rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <p className="section-label mb-1" style={{ color: 'rgba(255,255,255,.7)' }}>Administration</p>
-            <h2 style={{ fontWeight: 900, letterSpacing: '-.04em', margin: 0 }}>Checklist Templates</h2>
-            <p style={{ margin: '.25rem 0 0', opacity: .85, fontSize: '.9rem' }}>Build and manage audit checklists per ambulance type</p>
-          </div>
-          {!showForm && (
-            <button
-              className="btn-hero"
-              onClick={() => { setEditTemplate(null); setShowForm(true); }}
-              style={{ background: 'rgba(255,255,255,.2)', border: '1.5px solid rgba(255,255,255,.35)', boxShadow: 'none' }}
-            >
-              + New Template
-            </button>
-          )}
+    <div className="admin-page admin-templates">
+      <div className="page-banner admin-banner anim-fade-up admin-templates-banner">
+        <div className="admin-banner-inner admin-templates-banner-inner">
+          <p className="section-label mb-1" style={{ color: 'rgba(255,255,255,.7)' }}>Administration</p>
+          <h2 className="admin-banner-title" style={{ fontWeight: 900, letterSpacing: '-.04em', margin: 0 }}>Checklist Templates</h2>
+          <p style={{ margin: '.25rem 0 0', opacity: .85, fontSize: '.9rem' }}>Build and manage audit checklists per ambulance type</p>
         </div>
+        {!showForm && (
+          <button
+            type="button"
+            className="btn-hero admin-banner-cta"
+            onClick={handleNewTemplate}
+            style={{ background: 'rgba(255,255,255,.2)', border: '1.5px solid rgba(255,255,255,.35)', boxShadow: 'none' }}
+          >
+            + New Template
+          </button>
+        )}
       </div>
 
-      {/* Status grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '1rem', marginBottom: '1.75rem' }}>
-        {TYPES.map((type, i) => {
+      <div className="admin-templates-type-grid">
+        {TYPES.map((type) => {
           const active = templates.find((t) => t.ambulanceType === type && t.isActive);
-          const m = TYPE_META[type];
+          const selected = typeFilter === type;
           return (
             <button
               key={type}
               type="button"
-              onClick={() => setTypeFilter(typeFilter === type ? '' : type)}
+              onClick={() => setTypeFilter(selected ? '' : type)}
               style={{
-                textAlign: 'center', padding: '.85rem .5rem', borderRadius: 14, cursor: 'pointer',
-                background: typeFilter === type ? m.color : active ? m.bg : '#f9fafb',
-                border: `2px solid ${typeFilter === type ? m.color : active ? m.color + '44' : '#e5e7eb'}`,
-                transition: 'all .2s', outline: 'none',
-                boxShadow: typeFilter === type ? `0 4px 14px ${m.color}33` : 'none',
+                textAlign: 'center', padding: '.9rem .5rem', borderRadius: 12, cursor: 'pointer',
+                background: selected ? 'var(--sidebar-active-bg)' : 'var(--card-bg)',
+                border: `1px solid ${selected ? 'var(--sidebar-active-bg)' : 'var(--card-border)'}`,
+                transition: 'var(--transition)', outline: 'none',
+                boxShadow: selected ? 'var(--shadow-sm)' : 'none',
               }}
             >
-              <div style={{ fontSize: '1.3rem', marginBottom: '.2rem' }}>{m.emoji}</div>
-              <div style={{ fontWeight: 800, fontSize: '.8rem', color: typeFilter === type ? '#fff' : active ? m.color : '#9ca3af' }}>{type}</div>
-              <div style={{ fontSize: '.68rem', marginTop: '.15rem', color: typeFilter === type ? 'rgba(255,255,255,.8)' : active ? m.color : '#d1d5db' }}>
-                {active ? `v${active.version} ✓` : 'no template'}
+              <div style={{ fontWeight: 700, fontSize: '.85rem', color: selected ? '#fff' : '#475569', marginBottom: '.2rem' }}>{type}</div>
+              <div style={{ fontSize: '.75rem', color: selected ? 'rgba(255,255,255,.85)' : '#64748b' }}>
+                {active ? `v${active.version} ✓` : '—'}
               </div>
             </button>
           );
@@ -1017,27 +1111,20 @@ export default function TemplateBuilder() {
       {showForm && (
         <TemplateWizard
           editTemplate={editTemplate}
+          initialType={initialType}
+          initialVersion={initialVersion}
           onSuccess={handleFormSuccess}
           onCancel={() => { setShowForm(false); setEditTemplate(null); }}
         />
       )}
 
-      {/* Templates list */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h6 style={{ fontWeight: 800, margin: 0, fontSize: '.95rem' }}>
+      <div className="admin-templates-list-header">
+        <h6 className="admin-templates-list-title">
           {typeFilter ? `${typeFilter} Templates` : 'All Templates'}
-          <span style={{
-            background: '#f3f4f6', color: '#374151', marginLeft: '.5rem',
-            padding: '.12rem .55rem', borderRadius: 99, fontSize: '.75rem',
-          }}>
-            {filtered.length}
-          </span>
+          <span className="admin-templates-list-count">{filtered.length}</span>
         </h6>
         {typeFilter && (
-          <button
-            onClick={() => setTypeFilter('')}
-            style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '.8rem', cursor: 'pointer', fontWeight: 600 }}
-          >
+          <button type="button" className="admin-templates-clear-filter" onClick={() => setTypeFilter('')}>
             ✕ Clear filter
           </button>
         )}
@@ -1050,9 +1137,11 @@ export default function TemplateBuilder() {
             <p>{typeFilter ? `No ${typeFilter} templates yet.` : 'No templates yet. Create one above.'}</p>
           </div>
         ) : (
-          filtered.map((t) => (
-            <TemplateCard key={t._id} tpl={t} onActivate={handleActivate} onEdit={handleEdit} />
-          ))
+          <div className="admin-templates-cards">
+            {filtered.map((t) => (
+              <TemplateCard key={t._id} tpl={t} onActivate={handleActivate} onEdit={handleEdit} />
+            ))}
+          </div>
         )
       )}
     </div>

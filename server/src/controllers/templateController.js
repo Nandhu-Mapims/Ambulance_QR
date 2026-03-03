@@ -40,13 +40,23 @@ const getActiveTemplate = async (req, res, next) => {
   res.json({ success: true, template });
 };
 
-const createTemplate = async (req, res) => {
-  const template = await ChecklistTemplate.create({
-    ...req.body,
-    createdBy: req.user._id,
-  });
-  logger.info({ templateId: template._id, type: template.ambulanceType }, 'Template created');
-  res.status(201).json({ success: true, template });
+const createTemplate = async (req, res, next) => {
+  try {
+    const template = await ChecklistTemplate.create({
+      ...req.body,
+      createdBy: req.user._id,
+    });
+    logger.info({ templateId: template._id, type: template.ambulanceType }, 'Template created');
+    res.status(201).json({ success: true, template });
+  } catch (err) {
+    // Handle duplicate version per ambulance type with a friendly message
+    if (err.code === 11000) {
+      const friendly = new Error('A template with this ambulance type and version already exists. Please bump the version number.');
+      friendly.statusCode = 409;
+      return next(friendly);
+    }
+    return next(err);
+  }
 };
 
 const updateTemplate = async (req, res, next) => {
@@ -56,15 +66,20 @@ const updateTemplate = async (req, res, next) => {
     err.statusCode = 404;
     return next(err);
   }
-  if (template.isActive) {
-    const err = new Error('Cannot edit an active template — deactivate it first');
-    err.statusCode = 409;
+
+  try {
+    Object.assign(template, req.body);
+    await template.save();
+    res.json({ success: true, template });
+  } catch (err) {
+    // Handle duplicate (ambulanceType, version) conflicts with a clear error
+    if (err.code === 11000) {
+      const friendly = new Error('A template with this ambulance type and version already exists. Please choose a higher version number.');
+      friendly.statusCode = 409;
+      return next(friendly);
+    }
     return next(err);
   }
-
-  Object.assign(template, req.body);
-  await template.save();
-  res.json({ success: true, template });
 };
 
 const activateTemplate = async (req, res, next) => {

@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../../api/axios';
+import api, { getApiBaseUrl } from '../../api/axios';
 import Spinner from '../../components/Spinner';
 
 const STATUS_COLOR = { SUBMITTED: 'info', NEED_ACTION: 'warning', CLOSED: 'success' };
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = getApiBaseUrl();
 
 /* ── Stat card ────────────────────────────────────────────────────────────── */
 function StatCard({ label, value, sub, color = 'primary', icon }) {

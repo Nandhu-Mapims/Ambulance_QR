@@ -36,7 +36,7 @@ function EvidenceField({ questionKey, value, onChange }) {
   return (
     <div className="mt-2 p-2 bg-danger bg-opacity-10 rounded border border-danger border-opacity-25">
       <label className="form-label text-danger small fw-semibold mb-1">
-        📷 Evidence photo required for this NO answer
+        Evidence mandatory for NO answer
       </label>
       <input
         type="file"
@@ -79,7 +79,7 @@ function QuestionField({ q, register, control, setValue, index }) {
         </div>
 
         {q.type === 'YESNO' && (
-          <div className="btn-group" role="group">
+          <div className="btn-group audit-yesno-group w-100" role="group">
             {['YES', 'NO'].map((opt) => (
               <label
                 key={opt}
@@ -176,9 +176,8 @@ export default function AuditFill() {
   const { register, handleSubmit, control, setValue, watch } = useForm();
 
   useEffect(() => {
-    if (!token) { setError('Missing QR token — please re-scan.'); setLoading(false); return; }
-
-    api.get(`/audit/resolve/${encodeURIComponent(numberPlate)}`, { params: { t: token } })
+    const params = token ? { t: token } : {};
+    api.get(`/audit/resolve/${encodeURIComponent(numberPlate)}`, { params })
       .then(({ data }) => setResolveData(data))
       .catch((e) => setError(e.response?.data?.message || 'Invalid or expired QR code.'))
       .finally(() => setLoading(false));
@@ -264,13 +263,13 @@ export default function AuditFill() {
   const sorted = [...template.questions].sort((a, b) => a.order - b.order);
 
   return (
-    <div className="container">
+    <div className="container audit-fill-wrap px-2 px-md-3">
       <div className="row justify-content-center">
-        <div className="col-lg-8">
+        <div className="col-12 col-lg-8">
 
           {/* ── Sticky ambulance + progress banner ── */}
           <div
-            className="card border-danger border-2 mb-4 shadow-sm"
+            className="card border-danger border-2 mb-4 shadow-sm audit-fill-sticky"
             style={{ position: 'sticky', top: 60, zIndex: 100, background: '#fff' }}
           >
             <div className="card-body py-2 px-3">
@@ -327,7 +326,7 @@ export default function AuditFill() {
               <div className="card-header bg-white d-flex justify-content-between align-items-center border-bottom">
                 <span className="fw-bold">Checklist ({sorted.length} questions)</span>
                 <span className="badge bg-danger">
-                  {sorted.filter((q) => q.required).length} required
+                  {sorted.filter((q) => q.required).length} mandatory
                 </span>
               </div>
               <div className="card-body">
@@ -344,7 +343,7 @@ export default function AuditFill() {
               </div>
             </div>
 
-            <div className="d-flex gap-3 pb-5">
+            <div className="d-flex gap-3 pb-5 audit-fill-actions flex-wrap">
               <button
                 type="submit"
                 className="btn btn-danger px-5 fw-bold py-2"

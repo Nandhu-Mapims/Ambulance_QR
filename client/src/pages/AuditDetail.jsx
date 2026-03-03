@@ -5,12 +5,9 @@
  */
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import api from '../api/axios';
+import api, { getServerRoot } from '../api/axios';
 import Spinner from '../components/Spinner';
 import { useAuth } from '../context/AuthContext';
-
-const STATUS_COLOR = { SUBMITTED: 'info', NEED_ACTION: 'warning', CLOSED: 'success' };
-const VALUE_COLOR = { YES: 'success', NO: 'danger' };
 
 function ResponseRow({ question, response }) {
   const val = response?.value;
@@ -32,12 +29,41 @@ function ResponseRow({ question, response }) {
       </td>
       <td className="align-top">
         {response?.evidenceUrl && (
-          <a href={`http://localhost:5000${response.evidenceUrl}`} target="_blank" rel="noreferrer" className="btn btn-xs btn-outline-secondary btn-sm small py-0 px-2">
+          <a href={`${getServerRoot()}${response.evidenceUrl}`} target="_blank" rel="noreferrer" className="btn btn-xs btn-outline-secondary btn-sm small py-0 px-2">
             📎 Evidence
           </a>
         )}
       </td>
     </tr>
+  );
+}
+
+function ResponseCard({ question, response, getServerRoot: getRoot }) {
+  const val = response?.value;
+  const isYesNo = question?.type === 'YESNO';
+  const isNo = isYesNo && val === 'NO';
+
+  return (
+    <div className={`audit-response-card ${isNo ? 'audit-response-card--no' : ''}`}>
+      <div className="audit-response-card-num">{question?.order != null ? question.order + 1 : '—'}</div>
+      <div className="audit-response-card-body">
+        <div className="audit-response-card-label">{question?.label ?? response?.key}</div>
+        <div className="audit-response-card-answer">
+          {isYesNo ? (
+            <span className={`badge bg-${val === 'YES' ? 'success' : val === 'NO' ? 'danger' : 'secondary'}`}>
+              {val ?? '—'}
+            </span>
+          ) : (
+            <span className="small">{val ?? <span className="text-muted">—</span>}</span>
+          )}
+        </div>
+        {response?.evidenceUrl && (
+          <a href={`${getRoot()}${response.evidenceUrl}`} target="_blank" rel="noreferrer" className="audit-response-card-evidence">
+            📎 Evidence
+          </a>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -69,18 +95,20 @@ export default function AuditDetail() {
   const status = audit.status;
 
   return (
-    <div className="page-shell">
-      <div className="d-flex align-items-center gap-3 mb-4">
-        <button className="btn btn-sm btn-outline-secondary" onClick={() => navigate(-1)}>← Back</button>
-        <h3 className="fw-bold mb-0">Audit Detail</h3>
-        <span className={`badge bg-${STATUS_COLOR[status] || 'secondary'} text-dark ms-auto fs-6`}>
+    <div className="page-shell audit-detail-shell">
+      <div className="audit-detail-header">
+        <button type="button" className="audit-detail-back" onClick={() => navigate(-1)} aria-label="Go back">
+          ← Back
+        </button>
+        <h3 className="audit-detail-title">Audit Detail</h3>
+        <span className={`audit-detail-status-badge status-${status}`}>
           {status}
         </span>
       </div>
 
-      <div className="row g-4">
+      <div className="row g-4 audit-detail-row">
         {/* ── Left column ── */}
-        <div className="col-lg-4">
+        <div className="col-12 col-lg-4">
           {/* Ambulance / audit meta */}
           <div className="card border-0 shadow-sm mb-4">
             <div className="card-header bg-danger text-white fw-bold">Ambulance</div>
@@ -142,22 +170,23 @@ export default function AuditDetail() {
 
           {/* Supervisor action */}
           {hasRole('SUPERVISOR', 'ADMIN') && status === 'NEED_ACTION' && (
-            <Link to={`/supervisor/actions/${audit._id}`} className="btn btn-warning w-100 fw-semibold">
+            <Link to={`/supervisor/actions/${audit._id}`} className="btn btn-warning w-100 fw-semibold audit-detail-action-btn">
               ⚠️ Resolve Corrective Action
             </Link>
           )}
         </div>
 
         {/* ── Right column: responses ── */}
-        <div className="col-lg-8">
-          <div className="card border-0 shadow-sm mb-4">
-            <div className="card-header bg-white d-flex justify-content-between align-items-center">
+        <div className="col-12 col-lg-8">
+          <div className="card border-0 shadow-sm mb-4 audit-responses-card">
+            <div className="card-header bg-white d-flex justify-content-between align-items-center audit-responses-header">
               <span className="fw-bold">Checklist Responses ({audit.responses.length})</span>
               {audit.nonComplianceCount > 0 && (
                 <span className="badge bg-danger">{audit.nonComplianceCount} NO answers</span>
               )}
             </div>
-            <div className="table-responsive">
+            {/* Desktop: table */}
+            <div className="d-none d-md-block table-responsive">
               <table className="table table-sm table-hover align-middle mb-0">
                 <thead className="table-light">
                   <tr>
@@ -174,6 +203,12 @@ export default function AuditDetail() {
                   ))}
                 </tbody>
               </table>
+            </div>
+            {/* Mobile: card list */}
+            <div className="d-md-none audit-responses-list">
+              {(audit.responses ?? []).map((r) => (
+                <ResponseCard key={r.key} question={questionMap[r.key]} response={r} getServerRoot={getServerRoot} />
+              ))}
             </div>
           </div>
 
@@ -196,7 +231,7 @@ export default function AuditDetail() {
                       <p className="small text-muted mb-1">Action: {issue.actionText}</p>
                     )}
                     {issue.evidenceUrl && (
-                      <a href={`http://localhost:5000${issue.evidenceUrl}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary btn-xs">
+                      <a href={`${getServerRoot()}${issue.evidenceUrl}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-secondary btn-xs">
                         📎 Evidence
                       </a>
                     )}

@@ -66,11 +66,13 @@ export default function AuditLanding() {
   const yesnoCount = template.questions.filter((q) => q.type === 'YESNO').length;
   const requiredCount = template.questions.filter((q) => q.required).length;
 
-  const fillUrl = `/audit/${encodeURIComponent(numberPlate)}/fill?t=${token}`;
+  const fillUrl = token
+    ? `/audit/${encodeURIComponent(numberPlate)}/fill?t=${token}`
+    : `/audit/${encodeURIComponent(numberPlate)}/fill`;
 
   return (
-    <div className="row justify-content-center">
-      <div className="col-md-7 col-lg-5">
+    <div className="row justify-content-center audit-landing-wrap">
+      <div className="col-12 col-md-7 col-lg-5 px-2 px-md-3">
 
         {/* Ambulance card */}
         <div className="card border-danger border-3 shadow mb-4">
@@ -101,7 +103,7 @@ export default function AuditLanding() {
             <div className="row g-2 text-center">
               {[
                 { label: 'Questions', value: template.questions.length, color: 'primary' },
-                { label: 'Required', value: requiredCount, color: 'danger' },
+                { label: 'Mandatory', value: requiredCount, color: 'danger' },
                 { label: 'Yes/No', value: yesnoCount, color: 'warning' },
               ].map((s) => (
                 <div key={s.label} className="col-4">
@@ -122,14 +124,6 @@ export default function AuditLanding() {
         {user.role !== 'EMT' ? (
           <div className="alert alert-info text-center">
             <strong>{user.role}</strong> — view only. Only EMT users can submit audits.
-          </div>
-        ) : !token ? (
-          <div className="alert alert-warning text-center">
-            <strong>No QR token detected.</strong><br />
-            <span className="small">You arrived via manual entry. Please re-scan the QR sticker to start an audit.</span>
-            <div className="mt-2">
-              <Link to="/scan" className="btn btn-sm btn-outline-warning">← Back to Scan</Link>
-            </div>
           </div>
         ) : (
           <Link

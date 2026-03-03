@@ -26,8 +26,8 @@ export default function AuditSuccess() {
   const isNeedAction = audit.status === 'NEED_ACTION';
 
   return (
-    <div className="row justify-content-center mt-4">
-      <div className="col-md-6 col-lg-5">
+    <div className="row justify-content-center mt-4 audit-success-wrap">
+      <div className="col-12 col-md-6 col-lg-5 px-2 px-md-3">
 
         {/* Hero card */}
         <div className={`card border-${status.color} border-3 shadow mb-4 text-center`}>

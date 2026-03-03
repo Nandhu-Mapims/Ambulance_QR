@@ -90,16 +90,14 @@ const rotateQr = async (req, res, next) => {
 };
 
 /** Public: validate QR token and return ambulance + active template.
- *  If the caller is an authenticated non-EMT (ADMIN/SUPERVISOR/ASSESSOR_VIEW)
- *  the token check is skipped so admins can inspect any ambulance by number plate.
+ *  Any authenticated user (including EMT) can resolve without a token for manual
+ *  number-plate entry; unauthenticated or QR-scan flows must supply t=.
  */
 const resolveQr = async (req, res, next) => {
   const { numberPlate } = req.params;
   const { t: token } = req.query;
 
-  // Authenticated privileged users can bypass token validation
-  const bypassToken =
-    req.user && req.user.role !== 'EMT';
+  const bypassToken = !!req.user;
 
   if (!token && !bypassToken) {
     const err = new Error('QR token is missing');

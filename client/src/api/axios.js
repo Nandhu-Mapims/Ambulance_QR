@@ -1,6 +1,26 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_PORT = '5000';
+
+/** Resolve API base URL. In dev we use relative /api so Vite proxies to the backend (phone reaches API via same origin). */
+function getApiBaseUrl() {
+  const env = import.meta.env.VITE_API_URL;
+  if (env && env.trim() !== '') return env.replace(/\/$/, '');
+  if (typeof window === 'undefined') return `http://localhost:${API_PORT}/api`;
+  if (import.meta.env.DEV) return '/api';
+  const { hostname, protocol } = window.location;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return `http://localhost:${API_PORT}/api`;
+  }
+  return `${protocol}//${hostname}:${API_PORT}/api`;
+}
+
+const BASE_URL = getApiBaseUrl();
+
+/** Base URL of the server without /api (for uploads, etc.). */
+export const getServerRoot = () => BASE_URL.replace(/\/api\/?$/, '');
+
+export { getApiBaseUrl };
 
 const api = axios.create({
   baseURL: BASE_URL,

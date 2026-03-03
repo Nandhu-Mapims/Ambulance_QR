@@ -6,46 +6,46 @@ const MENU = [
   {
     label: 'Overview',
     items: [
-      { to: '/dashboard', icon: '⊞', label: 'Dashboard' },
+      { to: '/dashboard', icon: '📊', label: 'Dashboard' },
     ],
   },
   {
     label: 'EMT',
     roles: ['EMT'],
     items: [
-      { to: '/scan',   icon: '◉', label: 'Scan QR' },
-      { to: '/audits', icon: '≡', label: 'My Audits' },
+      { to: '/scan',   icon: '📱', label: 'Scan QR' },
+      { to: '/audits', icon: '📋', label: 'My Audits' },
     ],
   },
   {
     label: 'Administration',
     roles: ['ADMIN'],
     items: [
-      { to: '/admin/ambulances', icon: '⊕', label: 'Ambulances' },
-      { to: '/admin/templates',  icon: '▤', label: 'Templates' },
-      { to: '/admin/users',      icon: '◉', label: 'User Management' },
+      { to: '/admin/ambulances', icon: '🚑', label: 'Ambulances' },
+      { to: '/admin/templates',  icon: '📄', label: 'Templates' },
+      { to: '/admin/users',      icon: '👥', label: 'User Management' },
     ],
   },
   {
     label: 'Supervisor',
     roles: ['SUPERVISOR', 'ADMIN'],
     items: [
-      { to: '/supervisor/actions', icon: '⚡', label: 'Open Issues' },
-      { to: '/audits',             icon: '≡', label: 'Audit Log' },
+      { to: '/supervisor/actions', icon: '⚠️', label: 'Open Issues' },
+      { to: '/audits',             icon: '📋', label: 'Audit Log' },
     ],
   },
   {
     label: 'Reports',
     roles: ['SUPERVISOR', 'ADMIN', 'ASSESSOR_VIEW'],
     items: [
-      { to: '/reports', icon: '◈', label: 'CQI Report' },
+      { to: '/reports', icon: '📈', label: 'CQI Report' },
     ],
   },
   {
     label: 'Records',
     roles: ['ASSESSOR_VIEW'],
     items: [
-      { to: '/audits', icon: '≡', label: 'Audit Log' },
+      { to: '/audits', icon: '📋', label: 'Audit Log' },
     ],
   },
 ];
@@ -83,9 +83,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
     .filter((g) => g.items.length > 0);
 
   const rm = ROLE_META[user?.role] || ROLE_META.EMT;
-  const W = collapsed ? 54 : 240;
+  /* Desktop: always full width. Mobile: overlay width. No collapsed state on desktop. */
+  const W = isMobile ? 260 : 240;
   const showAsOverlay = isMobile && mobileOpen;
-  const showExpanded = !collapsed || isMobile; /* on mobile overlay always show full menu */
+  const showExpanded = !isMobile || mobileOpen; /* desktop always expanded; mobile shows labels when overlay open */
 
   return (
     <>
@@ -106,58 +107,43 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
           position: 'fixed', top: 0, left: 0, bottom: 0,
           width: isMobile ? 260 : W,
           zIndex: 1040,
-          background: '#ffffff',
+          background: 'var(--sidebar-bg)',
           display: 'flex', flexDirection: 'column',
           transition: isMobile ? 'transform .25s cubic-bezier(.4,0,.2,1)' : 'width .22s cubic-bezier(.4,0,.2,1)',
           overflow: 'hidden',
-          borderRight: '1px solid #e8edf3',
-          boxShadow: '2px 0 8px rgba(0,0,0,.05)',
+          borderRight: '1px solid #c5d0dc',
+          boxShadow: 'var(--shadow-sm)',
         }}
       >
 
-      {/* ── Brand header ── */}
-      <div style={{
-        height: 54, flexShrink: 0,
-        padding: collapsed ? '0 .75rem' : '0 1.1rem',
-        display: 'flex', alignItems: 'center', gap: '.65rem',
-        borderBottom: '1px solid #e8edf3',
-        background: '#fff',
-      }}>
+      {/* ── Brand header (desktop: always full; mobile: overlay) ── */}
+      <div
+        style={{
+          height: 56, flexShrink: 0,
+          padding: '0 1rem',
+          display: 'flex', alignItems: 'center', gap: '.75rem',
+          borderBottom: '1px solid #c5d0dc',
+          background: 'var(--sidebar-header)',
+          minWidth: 0,
+        }}
+      >
         <div style={{
-          width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-          background: 'linear-gradient(135deg,#1e3a8a,#3b82f6)',
+          width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+          background: 'var(--grad-hero)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '1.05rem',
+          fontSize: '1.1rem',
         }}>
           🚑
         </div>
         {showExpanded && (
-          <div style={{ flex: 1, overflow: 'hidden' }}>
-            <div style={{ fontWeight: 700, fontSize: '14px', color: '#0f172a', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
-              AmbulanceQR
+          <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
+              Ambulance QR
             </div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
+            <div style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
               Audit System
             </div>
           </div>
-        )}
-        {!isMobile && (
-          <button
-            onClick={onToggle}
-            style={{
-              marginLeft: collapsed ? 0 : 'auto',
-              background: 'transparent', border: 'none',
-              color: '#b0bac8', width: 24, height: 24, flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', fontSize: '15px', borderRadius: 4,
-              transition: 'all .15s',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#475569'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#b0bac8'; }}
-            title={collapsed ? 'Expand' : 'Collapse'}
-          >
-            {collapsed ? '›' : '‹'}
-          </button>
         )}
         {isMobile && (
           <button
@@ -174,22 +160,22 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       {/* ── Navigation ── */}
       <nav style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
-        padding: collapsed ? '.6rem .5rem' : '.6rem .75rem',
+        padding: '.6rem .75rem',
       }}>
         {visibleGroups.map((group) => (
           <div key={group.label} style={{ marginBottom: '.25rem' }}>
             {/* Section label */}
             {showExpanded ? (
               <div style={{
-                fontSize: '11px', fontWeight: 700, letterSpacing: '.09em',
-                textTransform: 'uppercase', color: '#b0bac8',
-                padding: '.6rem .6rem .22rem',
+                fontSize: '11px', fontWeight: 600, letterSpacing: '.08em',
+                textTransform: 'uppercase', color: 'var(--sidebar-text-dim)',
+                padding: '.75rem .85rem .3rem',
                 userSelect: 'none',
               }}>
                 {group.label}
               </div>
             ) : (
-              <div style={{ margin: '.45rem .4rem .2rem', borderTop: '1px solid #f1f5f9' }} />
+              <div style={{ margin: '.5rem .4rem .2rem', borderTop: '1px solid #c5d0dc' }} />
             )}
 
             {group.items.map((item) => (
@@ -216,7 +202,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                         fontSize: '15px',
                         lineHeight: 1,
                         flexShrink: 0,
-                        color: isActive ? '#fff' : '#64748b',
+                        color: isActive ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
                         fontFamily: 'system-ui, sans-serif',
                       }}
                     >
@@ -227,7 +213,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                         style={{
                           fontSize: '14px',
                           fontWeight: isActive ? 600 : 500,
-                          color: isActive ? '#fff' : '#374151',
+                          color: isActive ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
@@ -249,9 +235,9 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       {showExpanded && (
         <div style={{ padding: '0 .75rem .4rem' }}>
           <div style={{
-            fontSize: '11px', fontWeight: 700, letterSpacing: '.09em',
-            textTransform: 'uppercase', color: '#b0bac8',
-            padding: '.6rem .6rem .22rem',
+            fontSize: '11px', fontWeight: 600, letterSpacing: '.08em',
+            textTransform: 'uppercase', color: 'var(--sidebar-text-dim)',
+            padding: '.6rem .85rem .22rem',
           }}>
             Account
           </div>
@@ -259,43 +245,44 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
             onClick={handleLogout}
             style={{
               display: 'flex', alignItems: 'center', gap: '.65rem',
-              padding: '.46rem .75rem', borderRadius: 7, width: '100%',
+              padding: '.5rem .85rem', borderRadius: 8, width: '100%',
               background: 'transparent', border: 'none', cursor: 'pointer',
               textAlign: 'left', transition: 'background .12s',
+              color: 'var(--sidebar-text)',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#fff1f2'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--sidebar-hover-bg)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
           >
-            <span style={{ fontSize: '15px', color: '#94a3b8' }}>⏻</span>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: '#374151' }}>Sign Out</span>
+            <span style={{ fontSize: '15px', color: 'var(--sidebar-text-dim)' }}>🚪</span>
+            <span style={{ fontSize: '14px', fontWeight: 500 }}>Sign Out</span>
           </button>
         </div>
       )}
 
-      {/* ── Footer: version + collapsed logout ── */}
       <div style={{
-        borderTop: '1px solid #e8edf3',
-        padding: (collapsed && !isMobile) ? '.55rem .5rem' : '.65rem 1.1rem',
+        borderTop: '1px solid #c5d0dc',
+        padding: (collapsed && !isMobile) ? '.6rem .5rem' : '.75rem 1rem',
         flexShrink: 0,
         display: 'flex', alignItems: 'center',
         justifyContent: (collapsed && !isMobile) ? 'center' : 'space-between',
-        gap: '.4rem',
+        gap: '.5rem',
+        background: 'var(--sidebar-header)',
       }}>
         {showExpanded ? (
           <>
             <div>
-              <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>
-                AmbulanceQR v1.0
+              <div style={{ fontSize: '11px', color: 'var(--sidebar-text-dim)', fontWeight: 600 }}>
+                Ambulance QR v1.0
               </div>
-              <div style={{ fontSize: '11px', color: rm.color, fontWeight: 700 }}>
+              <div style={{ fontSize: '12px', color: 'var(--sidebar-active-bg)', fontWeight: 600 }}>
                 {rm.label}
               </div>
             </div>
             <div style={{
-              width: 26, height: 26, borderRadius: '50%',
-              background: `linear-gradient(135deg,${rm.color},#3b82f6)`,
+              width: 28, height: 28, borderRadius: '50%',
+              background: 'var(--sidebar-active-bg)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '.7rem', fontWeight: 800, color: '#fff', flexShrink: 0,
+              fontSize: '.7rem', fontWeight: 700, color: '#fff', flexShrink: 0,
               cursor: 'default',
             }} title={user?.name}>
               {user?.name?.charAt(0).toUpperCase()}
@@ -303,10 +290,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
           </>
         ) : (
           <div style={{
-            width: 26, height: 26, borderRadius: '50%',
-            background: `linear-gradient(135deg,${rm.color},#3b82f6)`,
+            width: 28, height: 28, borderRadius: '50%',
+            background: 'var(--sidebar-active-bg)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '.7rem', fontWeight: 800, color: '#fff',
+            fontSize: '.7rem', fontWeight: 700, color: '#fff',
             cursor: 'default',
           }} title={user?.name}>
             {user?.name?.charAt(0).toUpperCase()}

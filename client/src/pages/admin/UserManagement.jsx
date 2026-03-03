@@ -6,14 +6,14 @@ import api from '../../api/axios';
 import Spinner from '../../components/Spinner';
 import { useToast } from '../../context/ToastContext';
 
-/* ── Constants ─────────────────────────────────────────────────────────────── */
+/* ── Constants: one color per role everywhere (filters, badges, avatars) ───────── */
 const ROLES = ['EMT', 'SUPERVISOR', 'ADMIN', 'ASSESSOR_VIEW'];
 
 const ROLE_META = {
-  ADMIN:         { color: '#dc2626', bg: '#fef2f2', border: '#fca5a5', label: 'Admin' },
-  SUPERVISOR:    { color: '#d97706', bg: '#fffbeb', border: '#fcd34d', label: 'Supervisor' },
-  EMT:           { color: '#059669', bg: '#f0fdf4', border: '#6ee7b7', label: 'EMT' },
-  ASSESSOR_VIEW: { color: '#2563eb', bg: '#eff6ff', border: '#93c5fd', label: 'Assessor' },
+  ADMIN:         { color: '#dc2626', dark: '#b91c1c', bg: '#fef2f2', border: '#fca5a5', label: 'Admin' },
+  SUPERVISOR:    { color: '#d97706', dark: '#b45309', bg: '#fffbeb', border: '#fcd34d', label: 'Supervisor' },
+  EMT:           { color: '#059669', dark: '#047857', bg: '#f0fdf4', border: '#6ee7b7', label: 'EMT' },
+  ASSESSOR_VIEW: { color: '#2563eb', dark: '#1d4ed8', bg: '#eff6ff', border: '#93c5fd', label: 'Assessor' },
 };
 
 /* ── Zod schema ─────────────────────────────────────────────────────────────── */
@@ -25,13 +25,13 @@ const schema = z.object({
   station:  z.string().optional(),
 });
 
-/* ── Avatar ─────────────────────────────────────────────────────────────────── */
+/* ── Avatar (uses role color only so it matches badge and filter) ────────────── */
 function Avatar({ name, role }) {
   const m = ROLE_META[role] || ROLE_META.EMT;
   return (
     <div style={{
       width: 28, height: 28, borderRadius: '50%',
-      background: `linear-gradient(135deg, ${m.color}, #3b82f6)`,
+      background: `linear-gradient(135deg, ${m.color}, ${m.dark})`,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontWeight: 700, fontSize: '.72rem', color: '#fff', flexShrink: 0,
     }}>
@@ -55,8 +55,8 @@ function RoleBadge({ role }) {
   );
 }
 
-/* ── Register Form Drawer ───────────────────────────────────────────────────── */
-function RegisterDrawer({ onClose, onSuccess }) {
+/* ── Create User Form (horizontal panel above list or vertical in drawer) ──────── */
+function CreateUserForm({ onSuccess, horizontal = false }) {
   const toast = useToast();
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
@@ -67,15 +67,15 @@ function RegisterDrawer({ onClose, onSuccess }) {
       await api.post('/auth/register', data);
       toast(`${data.name} registered successfully`, 'success');
       reset();
-      onSuccess();
+      onSuccess?.();
     } catch (e) {
       toast(e.response?.data?.message || 'Registration failed', 'error');
     }
   };
 
   const field = (label, key, type = 'text', placeholder = '', required = true) => (
-    <div style={{ marginBottom: '.75rem' }}>
-      <label style={{ display: 'block', fontWeight: 600, fontSize: '.75rem', color: '#374151', marginBottom: '.25rem' }}>
+    <div style={{ marginBottom: horizontal ? 0 : '.75rem', minWidth: horizontal ? 120 : undefined, flex: horizontal ? '1 1 120px' : undefined }}>
+      <label style={{ display: 'block', fontWeight: 600, fontSize: '.75rem', color: 'var(--primary-dark)', marginBottom: '.25rem' }}>
         {label} {required && <span style={{ color: '#dc2626' }}>*</span>}
       </label>
       <input
@@ -89,112 +89,78 @@ function RegisterDrawer({ onClose, onSuccess }) {
     </div>
   );
 
+  const roleDropdown = (
+    <div style={{ marginBottom: horizontal ? 0 : '.75rem', minWidth: horizontal ? 140 : undefined, flex: horizontal ? '0 1 auto' : undefined }}>
+      <label style={{ display: 'block', fontWeight: 600, fontSize: '.75rem', color: 'var(--primary-dark)', marginBottom: '.25rem' }}>
+        Role <span style={{ color: '#dc2626' }}>*</span>
+      </label>
+      <select
+        className={`form-select form-select-sm ${errors.role ? 'is-invalid' : ''}`}
+        style={{ fontSize: '13px', padding: '.38rem .65rem', minWidth: 140 }}
+        {...register('role')}
+        aria-label="Select role"
+      >
+        <option value="">Select role…</option>
+        {ROLES.map((r) => {
+          const m = ROLE_META[r];
+          return (
+            <option key={r} value={r}>{m.label}</option>
+          );
+        })}
+      </select>
+      {errors.role && <div className="invalid-feedback" style={{ fontSize: '.72rem' }}>{errors.role.message}</div>}
+    </div>
+  );
+
+  if (horizontal) {
+    return (
+      <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '.75rem 1rem' }}>
+        {field('Name', 'name', 'text', 'e.g. John Doe')}
+        {field('Email', 'email', 'email', 'user@example.com')}
+        {field('Password', 'password', 'password', 'Min 6')}
+        {roleDropdown}
+        {field('Station', 'station', 'text', 'e.g. HQ', false)}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="btn-hero"
+          style={{
+            padding: '.38rem 1rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.35rem',
+            cursor: isSubmitting ? 'not-allowed' : 'pointer',
+            opacity: isSubmitting ? 0.7 : 1,
+            flexShrink: 0,
+          }}
+        >
+          {isSubmitting && <span className="spinner-border spinner-border-sm" style={{ width: 12, height: 12 }} />}
+          {isSubmitting ? 'Creating…' : '✓ Create User'}
+        </button>
+      </form>
+    );
+  }
+
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {field('Full Name', 'name', 'text', 'e.g. John Doe')}
+      {field('Email Address', 'email', 'email', 'user@ambuqr.com')}
+      {field('Password', 'password', 'password', 'Minimum 6 characters')}
+      {roleDropdown}
+      {field('Station', 'station', 'text', 'e.g. HQ, North, South', false)}
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="btn-hero"
         style={{
-          position: 'fixed', inset: 0, background: 'rgba(15,23,42,.35)',
-          zIndex: 1050, backdropFilter: 'blur(2px)',
+          width: '100%', padding: '.5rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem',
+          cursor: isSubmitting ? 'not-allowed' : 'pointer',
+          opacity: isSubmitting ? 0.7 : 1,
         }}
-      />
-      {/* Drawer */}
-      <div style={{
-        position: 'fixed', top: 0, right: 0, bottom: 0,
-        width: 380, background: '#fff', zIndex: 1051,
-        boxShadow: '-8px 0 40px rgba(0,0,0,.14)',
-        display: 'flex', flexDirection: 'column',
-        animation: 'slideInRight .25s cubic-bezier(.4,0,.2,1) both',
-      }}>
-        {/* Header */}
-        <div style={{
-          padding: '.75rem 1.1rem',
-          background: 'linear-gradient(120deg,#1e3a8a,#1d4ed8)',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          flexShrink: 0,
-        }}>
-          <div>
-            <div style={{ color: 'rgba(255,255,255,.6)', fontSize: '.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>
-              Administration
-            </div>
-            <h5 style={{ color: '#fff', fontWeight: 700, margin: 0, fontSize: '.92rem' }}>
-              Register New User
-            </h5>
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'rgba(255,255,255,.12)', border: 'none', borderRadius: 6,
-              color: '#fff', width: 26, height: 26, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.8rem',
-            }}
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Form body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.1rem' }}>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            {field('Full Name', 'name', 'text', 'e.g. John Doe')}
-            {field('Email Address', 'email', 'email', 'user@ambuqr.com')}
-            {field('Password', 'password', 'password', 'Minimum 6 characters')}
-
-            <div style={{ marginBottom: '.75rem' }}>
-              <label style={{ display: 'block', fontWeight: 600, fontSize: '.75rem', color: '#374151', marginBottom: '.25rem' }}>
-                Role <span style={{ color: '#dc2626' }}>*</span>
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.4rem' }}>
-                {ROLES.map((r) => {
-                  const m = ROLE_META[r];
-                  return (
-                    <label key={r} style={{ cursor: 'pointer' }}>
-                      <input type="radio" value={r} {...register('role')} style={{ display: 'none' }} />
-                      <div style={{
-                        padding: '.4rem .6rem', borderRadius: 7,
-                        border: `1px solid ${m.border}`,
-                        background: m.bg, textAlign: 'center',
-                        transition: 'all .12s',
-                      }}
-                        onMouseEnter={(e) => { e.currentTarget.style.boxShadow = `0 2px 6px ${m.color}25`; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
-                      >
-                        <div style={{ fontWeight: 700, fontSize: '.75rem', color: m.color }}>{m.label}</div>
-                        <div style={{ fontSize: '.63rem', color: '#9ca3af', marginTop: '.05rem' }}>
-                          {r === 'ADMIN' && 'Full access'}
-                          {r === 'SUPERVISOR' && 'Manage audits'}
-                          {r === 'EMT' && 'Field audits'}
-                          {r === 'ASSESSOR_VIEW' && 'View reports'}
-                        </div>
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
-              {errors.role && <div style={{ color: '#dc2626', fontSize: '.72rem', marginTop: '.25rem' }}>{errors.role.message}</div>}
-            </div>
-
-            {field('Station', 'station', 'text', 'e.g. HQ, North, South', false)}
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn-hero"
-              style={{
-                width: '100%', padding: '.5rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                opacity: isSubmitting ? .7 : 1,
-              }}
-            >
-              {isSubmitting && <span className="spinner-border spinner-border-sm" style={{ width: 12, height: 12 }} />}
-              {isSubmitting ? 'Creating…' : '✓ Create User'}
-            </button>
-          </form>
-        </div>
-      </div>
-    </>
+      >
+        {isSubmitting && <span className="spinner-border spinner-border-sm" style={{ width: 12, height: 12 }} />}
+        {isSubmitting ? 'Creating…' : '✓ Create User'}
+      </button>
+    </form>
   );
 }
 
@@ -203,9 +169,11 @@ export default function UserManagement() {
   const toast = useToast();
   const [users, setUsers]     = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
   const [toggling, setToggling] = useState(null);
   const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(''); // '' | 'active' | 'inactive'
+  const [stationFilter, setStationFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchUsers = useCallback(() =>
     api.get('/auth/users')
@@ -229,62 +197,79 @@ export default function UserManagement() {
     }
   };
 
-  /* Stats */
+  /* Stats & filter logic */
   const activeCount = users.filter((u) => u.isActive).length;
   const roleCounts  = ROLES.reduce((acc, r) => ({ ...acc, [r]: users.filter((u) => u.role === r).length }), {});
-  const filtered    = roleFilter ? users.filter((u) => u.role === roleFilter) : users;
+  const stations    = [...new Set(users.map((u) => u.station).filter(Boolean))].sort();
+
+  const filtered = users.filter((u) => {
+    if (roleFilter && u.role !== roleFilter) return false;
+    if (statusFilter === 'active' && !u.isActive) return false;
+    if (statusFilter === 'inactive' && u.isActive) return false;
+    if (stationFilter && (u.station ?? '') !== stationFilter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      const matchName = (u.name ?? '').toLowerCase().includes(q);
+      const matchEmail = (u.email ?? '').toLowerCase().includes(q);
+      if (!matchName && !matchEmail) return false;
+    }
+    return true;
+  });
+
+  const isEmptyFiltered = filtered.length === 0 && users.length > 0;
+  const hasActiveFilters = roleFilter || statusFilter || stationFilter || searchQuery.trim();
+  const clearAllFilters = () => {
+    setRoleFilter('');
+    setStatusFilter('');
+    setStationFilter('');
+    setSearchQuery('');
+  };
 
   return (
-    <div>
-      {/* ── Page heading row ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.9rem' }}>
-        <div>
-          <h2 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a', marginBottom: '.1rem' }}>User Management</h2>
-          <p style={{ color: '#64748b', fontSize: '.75rem', margin: 0 }}>
-            {users.length} total users &nbsp;·&nbsp; {activeCount} active
+    <div className="page-shell admin-page admin-users">
+      <div className="admin-banner">
+        <div className="admin-banner-inner">
+          <h2 className="admin-banner-title">User Management</h2>
+          <p className="admin-banner-subtitle">
+            {users.length} total users · {activeCount} active
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="btn-hero"
-          style={{ display: 'flex', alignItems: 'center', gap: '.35rem' }}
-        >
-          ＋ Register User
-        </button>
       </div>
 
-      {/* ── Stat filter chips ── */}
-      <div style={{ display: 'flex', gap: '.5rem', marginBottom: '.85rem', flexWrap: 'wrap' }}>
+      <div className="admin-form-card admin-create-user">
+        <div className="admin-form-title">Register new user</div>
+        <CreateUserForm onSuccess={fetchUsers} horizontal />
+      </div>
+
+      <div className="admin-filter-bar admin-role-filters">
+        <div className="admin-role-pills">
         {ROLES.map((role) => {
           const m = ROLE_META[role];
           const active = roleFilter === role;
           return (
             <button
               key={role}
+              type="button"
               onClick={() => setRoleFilter(active ? '' : role)}
+              aria-pressed={active}
+              aria-label={active ? 'Show all users' : `Filter by ${m.label}`}
+              className="admin-role-pill"
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: '.4rem',
-                padding: '.28rem .75rem', borderRadius: 99, border: 'none',
-                background: active ? m.color : '#fff',
+                borderColor: active ? m.color : undefined,
+                background: active ? m.color : 'var(--card-bg)',
                 color: active ? '#fff' : m.color,
-                fontSize: '.72rem', fontWeight: 700,
-                cursor: 'pointer', transition: 'all .15s',
-                boxShadow: active ? `0 2px 8px ${m.color}40` : '0 1px 3px rgba(0,0,0,.06)',
-                outline: active ? 'none' : `1px solid ${m.border}`,
               }}
             >
-              <span style={{ fontSize: '.82rem' }}>
+              <span className="admin-role-pill-icon">
                 {role === 'ADMIN' && '👑'}
                 {role === 'SUPERVISOR' && '🔍'}
                 {role === 'EMT' && '🚑'}
                 {role === 'ASSESSOR_VIEW' && '📊'}
               </span>
               {m.label}
-              <span style={{
+              <span className="admin-role-pill-count" style={{
                 background: active ? 'rgba(255,255,255,.25)' : m.bg,
                 color: active ? '#fff' : m.color,
-                borderRadius: 99, padding: '0 .35rem',
-                fontSize: '.68rem',
               }}>
                 {roleCounts[role]}
               </span>
@@ -292,147 +277,186 @@ export default function UserManagement() {
           );
         })}
         {roleFilter && (
-          <button
-            onClick={() => setRoleFilter('')}
-            style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 99, color: '#94a3b8', fontSize: '.72rem', padding: '.28rem .65rem', cursor: 'pointer' }}
-          >
+          <button type="button" className="admin-filter-clear" onClick={() => setRoleFilter('')}>
             ✕ Clear
           </button>
         )}
+        </div>
       </div>
 
-      {/* ── Table card ── */}
-      <div style={{
-        background: '#fff', borderRadius: 8,
-        border: '1px solid #e8edf3',
-        boxShadow: '0 1px 4px rgba(0,0,0,.05)',
-        overflow: 'hidden',
-      }}>
-        {/* Toolbar */}
-        <div style={{
-          padding: '.5rem .9rem',
-          display: 'flex', alignItems: 'center', gap: '.5rem',
-          borderBottom: '1px solid #f1f5f9',
-        }}>
-          <span style={{ fontWeight: 700, fontSize: '.78rem', color: '#374151' }}>
+      <div className="admin-table-card">
+        <div className="admin-table-header">
+          <span className="admin-table-title">
             {roleFilter ? `${ROLE_META[roleFilter]?.label} Users` : 'All Users'}
           </span>
-          <span style={{
-            background: '#eff6ff', color: '#4f46e5', borderRadius: 99,
-            padding: '.05rem .45rem', fontSize: '.68rem', fontWeight: 700,
-            border: '1px solid #c7d2fe',
-          }}>
-            {filtered.length}
-          </span>
+          <span className="admin-table-badge">{filtered.length}</span>
+        </div>
+
+        <div className="admin-table-filters">
+          <input
+            type="search"
+            placeholder="Search name or email…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search users by name or email"
+            className="admin-search-input"
+          />
+          <span className="admin-filter-label-inline">Status:</span>
+          {['', 'active', 'inactive'].map((s) => {
+            const label = s === '' ? 'All' : s === 'active' ? 'Active' : 'Inactive';
+            const isActive = statusFilter === s;
+            return (
+              <button
+                key={s || 'all'}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                aria-pressed={isActive}
+                className={`admin-status-pill ${isActive ? 'active' : ''}`}
+              >
+                {label}
+              </button>
+            );
+          })}
+          {stations.length > 0 && (
+            <>
+              <span className="admin-filter-label-inline">Station:</span>
+              <select
+                value={stationFilter}
+                onChange={(e) => setStationFilter(e.target.value)}
+                aria-label="Filter by station"
+                className="admin-station-select"
+              >
+                <option value="">All stations</option>
+                {stations.map((st) => (
+                  <option key={st} value={st}>{st}</option>
+                ))}
+              </select>
+            </>
+          )}
+          {hasActiveFilters && (
+            <button type="button" className="admin-filter-clear" onClick={clearAllFilters}>
+              ✕ Clear filters
+            </button>
+          )}
         </div>
 
         {loading ? (
-          <div style={{ padding: '2rem' }}><Spinner /></div>
+          <div className="admin-loading"><Spinner /></div>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">👤</div>
-            <p>No users found{roleFilter ? ` for ${ROLE_META[roleFilter]?.label}` : ''}.</p>
+            {isEmptyFiltered ? (
+              <>
+                <p>{hasActiveFilters ? 'No users match the current filters.' : `No users in ${ROLE_META[roleFilter]?.label ?? roleFilter}.`}</p>
+                <button type="button" className="btn-hero" style={{ marginTop: '.75rem' }} onClick={clearAllFilters}>
+                  {hasActiveFilters ? 'Clear filters' : 'Show all'}
+                </button>
+              </>
+            ) : (
+              <p>No users found. Register one to get started.</p>
+            )}
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f8fafc' }}>
-                {['#', 'User', 'Email', 'Role', 'Station', 'Status', 'Joined', 'Action'].map((h) => (
-                  <th key={h} style={{
-                    padding: '.45rem .8rem', textAlign: 'left',
-                    fontSize: '.65rem', fontWeight: 700, letterSpacing: '.07em',
-                    textTransform: 'uppercase', color: '#94a3b8',
-                    borderBottom: '1px solid #e8edf3',
-                  }}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((u, i) => (
-                <tr
-                  key={u._id}
-                  style={{
-                    borderBottom: i < filtered.length - 1 ? '1px solid #f1f5f9' : 'none',
-                    opacity: u.isActive ? 1 : .5,
-                    transition: 'background .12s',
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#f8faff'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                >
-                  <td style={{ padding: '.5rem .8rem', color: '#94a3b8', fontSize: '.72rem', width: 36 }}>{i + 1}</td>
-                  {/* User */}
-                  <td style={{ padding: '.5rem .8rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-                      <Avatar name={u.name} role={u.role} />
-                      <span style={{ fontWeight: 600, fontSize: '.8rem', color: '#0f172a' }}>{u.name}</span>
+          <>
+            <div className="admin-table-wrap d-none d-md-block">
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table qr-table mb-0" style={{ minWidth: 640 }}>
+                  <thead>
+                    <tr>
+                      {['#', 'User', 'Email', 'Role', 'Station', 'Status', 'Joined', 'Action'].map((h) => (
+                        <th key={h}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((u, i) => (
+                      <tr key={u._id} style={{ opacity: u.isActive ? 1 : 0.6 }}>
+                        <td style={{ color: 'var(--sidebar-text-dim)', fontSize: '.75rem', width: 36 }}>{i + 1}</td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+                            <Avatar name={u.name} role={u.role} />
+                            <span style={{ fontWeight: 600, fontSize: '.875rem', color: 'var(--primary-dark)' }}>{u.name}</span>
+                          </div>
+                        </td>
+                        <td style={{ fontSize: '.8125rem', color: 'var(--sidebar-text-dim)' }}>{u.email}</td>
+                        <td><RoleBadge role={u.role} /></td>
+                        <td style={{ fontSize: '.8125rem', color: 'var(--sidebar-text-dim)' }}>
+                          {u.station ? (
+                            <span style={{
+                              background: 'var(--slate-100)', color: 'var(--sidebar-text-dim)',
+                              padding: '.15rem .5rem', borderRadius: 'var(--radius-sm)',
+                              fontSize: '.75rem', fontWeight: 600,
+                            }}>
+                              📍 {u.station}
+                            </span>
+                          ) : <span style={{ color: 'var(--slate-200)' }}>—</span>}
+                        </td>
+                        <td>
+                          <span role="status" aria-label={u.isActive ? 'Active' : 'Inactive'} className={`admin-user-status ${u.isActive ? 'active' : ''}`}>
+                            <span />
+                            {u.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: '.75rem', color: 'var(--sidebar-text-dim)' }}>
+                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB') : '—'}
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            onClick={() => handleToggle(u)}
+                            disabled={toggling === u._id}
+                            aria-label={u.isActive ? `Deactivate ${u.name}` : `Activate ${u.name}`}
+                            className="admin-toggle-btn"
+                          >
+                            {toggling === u._id
+                              ? <span className="spinner-border spinner-border-sm" style={{ width: 10, height: 10 }} />
+                              : u.isActive ? 'Deactivate' : 'Activate'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <ul className="admin-card-list admin-user-cards d-md-none">
+              {filtered.map((u) => (
+                <li key={u._id} className={`admin-card admin-user-card ${!u.isActive ? 'admin-card--inactive' : ''}`}>
+                  <div className="admin-user-card-top">
+                    <Avatar name={u.name} role={u.role} />
+                    <div className="admin-user-card-info">
+                      <span className="admin-user-card-name">{u.name}</span>
+                      <span className="admin-user-card-email">{u.email}</span>
                     </div>
-                  </td>
-                  <td style={{ padding: '.5rem .8rem', fontSize: '.75rem', color: '#64748b' }}>{u.email}</td>
-                  <td style={{ padding: '.5rem .8rem' }}><RoleBadge role={u.role} /></td>
-                  <td style={{ padding: '.5rem .8rem', fontSize: '.75rem', color: '#64748b' }}>
-                    {u.station ? (
-                      <span style={{
-                        background: '#f1f5f9', color: '#374151',
-                        padding: '.1rem .5rem', borderRadius: 5,
-                        fontSize: '.72rem', fontWeight: 600,
-                      }}>
-                        📍 {u.station}
-                      </span>
-                    ) : <span style={{ color: '#cbd5e1' }}>—</span>}
-                  </td>
-                  <td style={{ padding: '.5rem .8rem' }}>
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '.3rem',
-                      padding: '.15rem .5rem', borderRadius: 99, fontSize: '.68rem', fontWeight: 700,
-                      background: u.isActive ? '#f0fdf4' : '#f8f8f8',
-                      color: u.isActive ? '#059669' : '#94a3b8',
-                      border: `1px solid ${u.isActive ? '#6ee7b7' : '#e5e7eb'}`,
-                    }}>
-                      <span style={{
-                        width: 5, height: 5, borderRadius: '50%',
-                        background: u.isActive ? '#059669' : '#94a3b8',
-                      }} />
+                    <RoleBadge role={u.role} />
+                  </div>
+                  <div className="admin-user-card-meta">
+                    {u.station && <span className="admin-user-card-station">📍 {u.station}</span>}
+                    <span className="admin-user-card-joined">
+                      {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB') : '—'}
+                    </span>
+                    <span role="status" aria-label={u.isActive ? 'Active' : 'Inactive'} className={`admin-user-status ${u.isActive ? 'active' : ''}`}>
+                      <span />
                       {u.isActive ? 'Active' : 'Inactive'}
                     </span>
-                  </td>
-                  <td style={{ padding: '.5rem .8rem', fontSize: '.72rem', color: '#94a3b8' }}>
-                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB') : '—'}
-                  </td>
-                  <td style={{ padding: '.5rem .8rem' }}>
-                    <button
-                      onClick={() => handleToggle(u)}
-                      disabled={toggling === u._id}
-                      style={{
-                        padding: '.22rem .65rem', borderRadius: 6, fontSize: '.7rem', fontWeight: 600,
-                        border: `1px solid ${u.isActive ? '#fcd34d' : '#6ee7b7'}`,
-                        background: u.isActive ? '#fffbeb' : '#f0fdf4',
-                        color: u.isActive ? '#d97706' : '#059669',
-                        cursor: toggling === u._id ? 'not-allowed' : 'pointer',
-                        transition: 'all .12s', opacity: toggling === u._id ? .6 : 1,
-                        display: 'inline-flex', alignItems: 'center', gap: '.3rem',
-                      }}
-                    >
-                      {toggling === u._id
-                        ? <span className="spinner-border spinner-border-sm" style={{ width: 10, height: 10 }} />
-                        : u.isActive ? 'Deactivate' : 'Activate'}
-                    </button>
-                  </td>
-                </tr>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggle(u)}
+                    disabled={toggling === u._id}
+                    aria-label={u.isActive ? `Deactivate ${u.name}` : `Activate ${u.name}`}
+                    className="admin-card-btn admin-user-card-toggle"
+                  >
+                    {toggling === u._id
+                      ? <span className="spinner-border spinner-border-sm" />
+                      : u.isActive ? 'Deactivate' : 'Activate'}
+                  </button>
+                </li>
               ))}
-            </tbody>
-          </table>
+            </ul>
+          </>
         )}
       </div>
-
-      {/* ── Register Drawer ── */}
-      {showForm && (
-        <RegisterDrawer
-          onClose={() => setShowForm(false)}
-          onSuccess={() => { setShowForm(false); fetchUsers(); }}
-        />
-      )}
     </div>
   );
 }
