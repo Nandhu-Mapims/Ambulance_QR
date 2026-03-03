@@ -36,7 +36,7 @@ services:
     volumes:
       - uploads_data:/app/uploads
     ports:
-      - "5000:5000"
+      - "5010:5000"
     networks:
       - app_net
 
