@@ -31,7 +31,7 @@ services:
     env_file: ./server/.env
     environment:
       MONGO_URI: mongodb://ambulance_mongo:27017/ambulance_qr
-      CLIENT_URL: http://localhost
+      CLIENT_URL: http://194.238.22.210:8085
       NODE_ENV: production
     volumes:
       - uploads_data:/app/uploads
@@ -46,7 +46,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://<server-domain-or-ip>:5010/api
+        VITE_API_URL: http://194.238.22.210:5010/api
     container_name: ambulance_client
     restart: unless-stopped
     depends_on:
