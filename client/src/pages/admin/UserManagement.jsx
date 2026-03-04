@@ -16,13 +16,21 @@ const ROLE_META = {
   ASSESSOR_VIEW: { color: '#2563eb', dark: '#1d4ed8', bg: '#eff6ff', border: '#93c5fd', label: 'Assessor' },
 };
 
-/* ── Zod schema ─────────────────────────────────────────────────────────────── */
+/* ── Zod schemas ────────────────────────────────────────────────────────────── */
 const schema = z.object({
   name:     z.string().min(2, 'Name required'),
   email:    z.string().email('Invalid email'),
   password: z.string().min(6, 'Minimum 6 characters'),
   role:     z.enum(ROLES, { required_error: 'Select a role' }),
   station:  z.string().optional(),
+});
+
+const editUserSchema = z.object({
+  name:     z.string().min(2, 'Name required'),
+  email:    z.string().email('Invalid email'),
+  role:     z.enum(ROLES, { required_error: 'Select a role' }),
+  station:  z.string().optional(),
+  newPassword: z.string().optional().refine((v) => !v || v.length >= 6, 'Min 6 characters'),
 });
 
 /* ── Avatar (uses role color only so it matches badge and filter) ────────────── */
@@ -164,12 +172,112 @@ function CreateUserForm({ onSuccess, horizontal = false }) {
   );
 }
 
+/* ── Edit User Modal (name, email, role, station, optional new password) ─────── */
+function EditUserModal({ user, onClose, onSuccess }) {
+  const toast = useToast();
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    resolver: zodResolver(editUserSchema),
+    defaultValues: user ? {
+      name: user.name ?? '',
+      email: user.email ?? '',
+      role: user.role ?? 'EMT',
+      station: user.station ?? '',
+      newPassword: '',
+    } : {},
+  });
+
+  if (!user) return null;
+
+  const onSubmit = async (data) => {
+    try {
+      const payload = { name: data.name, email: data.email, role: data.role, station: data.station ?? '' };
+      if (data.newPassword?.trim?.()) payload.newPassword = data.newPassword.trim();
+      await api.put(`/auth/users/${user._id}`, payload);
+      toast(`${data.name} updated successfully`, 'success');
+      onSuccess?.();
+      onClose();
+    } catch (e) {
+      toast(e.response?.data?.message ?? 'Update failed', 'error');
+    }
+  };
+
+  const field = (label, key, type = 'text', placeholder = '', required = true) => (
+    <div style={{ marginBottom: '.75rem' }}>
+      <label style={{ display: 'block', fontWeight: 600, fontSize: '.75rem', color: 'var(--primary-dark)', marginBottom: '.25rem' }}>
+        {label} {required && <span style={{ color: '#dc2626' }}>*</span>}
+      </label>
+      <input
+        type={type}
+        placeholder={placeholder}
+        className={`form-control form-control-sm ${errors[key] ? 'is-invalid' : ''}`}
+        style={{ fontSize: '13px', padding: '.38rem .65rem' }}
+        {...register(key)}
+      />
+      {errors[key] && <div className="invalid-feedback" style={{ fontSize: '.72rem' }}>{errors[key].message}</div>}
+    </div>
+  );
+
+  const roleDropdown = (
+    <div style={{ marginBottom: '.75rem' }}>
+      <label style={{ display: 'block', fontWeight: 600, fontSize: '.75rem', color: 'var(--primary-dark)', marginBottom: '.25rem' }}>
+        Role <span style={{ color: '#dc2626' }}>*</span>
+      </label>
+      <select
+        className={`form-select form-select-sm ${errors.role ? 'is-invalid' : ''}`}
+        style={{ fontSize: '13px', padding: '.38rem .65rem' }}
+        {...register('role')}
+        aria-label="Select role"
+      >
+        {ROLES.map((r) => {
+          const m = ROLE_META[r];
+          return <option key={r} value={r}>{m.label}</option>;
+        })}
+      </select>
+      {errors.role && <div className="invalid-feedback" style={{ fontSize: '.72rem' }}>{errors.role.message}</div>}
+    </div>
+  );
+
+  return (
+    <div className="admin-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-user-title">
+      <div className="admin-modal" style={{ maxWidth: 420 }}>
+        <div className="admin-modal-header">
+          <h3 id="edit-user-title" className="admin-modal-title">Edit User</h3>
+          <button type="button" className="admin-modal-close" onClick={onClose} aria-label="Close">×</button>
+        </div>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div className="admin-modal-body">
+            {field('Full Name', 'name', 'text', 'e.g. John Doe')}
+            {field('Email', 'email', 'email', 'user@example.com')}
+            {roleDropdown}
+            {field('Station', 'station', 'text', 'e.g. HQ', false)}
+            {field('New password (leave blank to keep)', 'newPassword', 'password', 'Min 6 characters', false)}
+          </div>
+          <div className="admin-modal-footer" style={{ display: 'flex', gap: '.5rem', justifyContent: 'flex-end' }}>
+            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={onClose}>Cancel</button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn-hero btn-sm"
+              style={{ opacity: isSubmitting ? 0.7 : 1 }}
+            >
+              {isSubmitting && <span className="spinner-border spinner-border-sm" style={{ width: 12, height: 12 }} />}
+              {isSubmitting ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Page ──────────────────────────────────────────────────────────────── */
 export default function UserManagement() {
   const toast = useToast();
   const [users, setUsers]     = useState([]);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState(''); // '' | 'active' | 'inactive'
   const [stationFilter, setStationFilter] = useState('');
@@ -191,9 +299,25 @@ export default function UserManagement() {
       setUsers((prev) => prev.map((u) => u._id === user._id ? { ...u, isActive: !u.isActive } : u));
       toast(`${user.name} ${user.isActive ? 'deactivated' : 'activated'}`, 'info');
     } catch (e) {
-      toast(e.response?.data?.message || 'Update failed', 'error');
+      toast(e.response?.data?.message ?? 'Update failed', 'error');
     } finally {
       setToggling(null);
+    }
+  };
+
+  const handleEdit = (u) => setEditingUser(u);
+
+  const handleDelete = async (user) => {
+    if (!window.confirm(`Delete user "${user.name}"? This cannot be undone.`)) return;
+    setDeletingId(user._id);
+    try {
+      await api.delete(`/auth/users/${user._id}`);
+      setUsers((prev) => prev.filter((u) => u._id !== user._id));
+      toast(`${user.name} removed`, 'info');
+    } catch (e) {
+      toast(e.response?.data?.message ?? 'Delete failed', 'error');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -401,17 +525,32 @@ export default function UserManagement() {
                           {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB') : '—'}
                         </td>
                         <td>
-                          <button
-                            type="button"
-                            onClick={() => handleToggle(u)}
-                            disabled={toggling === u._id}
-                            aria-label={u.isActive ? `Deactivate ${u.name}` : `Activate ${u.name}`}
-                            className="admin-toggle-btn"
-                          >
-                            {toggling === u._id
-                              ? <span className="spinner-border spinner-border-sm" style={{ width: 10, height: 10 }} />
-                              : u.isActive ? 'Deactivate' : 'Activate'}
-                          </button>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.35rem', alignItems: 'center' }}>
+                            <button type="button" onClick={() => handleEdit(u)} className="admin-toggle-btn" style={{ background: 'var(--blue-50)', color: 'var(--primary)', border: '1px solid var(--blue-200)' }} aria-label={`Edit ${u.name}`}>
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggle(u)}
+                              disabled={toggling === u._id}
+                              aria-label={u.isActive ? `Deactivate ${u.name}` : `Activate ${u.name}`}
+                              className="admin-toggle-btn"
+                            >
+                              {toggling === u._id
+                                ? <span className="spinner-border spinner-border-sm" style={{ width: 10, height: 10 }} />
+                                : u.isActive ? 'Deactivate' : 'Activate'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(u)}
+                              disabled={deletingId === u._id}
+                              className="admin-toggle-btn"
+                              style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}
+                              aria-label={`Delete ${u.name}`}
+                            >
+                              {deletingId === u._id ? <span className="spinner-border spinner-border-sm" style={{ width: 10, height: 10 }} /> : 'Delete'}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -440,23 +579,41 @@ export default function UserManagement() {
                       {u.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleToggle(u)}
-                    disabled={toggling === u._id}
-                    aria-label={u.isActive ? `Deactivate ${u.name}` : `Activate ${u.name}`}
-                    className="admin-card-btn admin-user-card-toggle"
-                  >
-                    {toggling === u._id
-                      ? <span className="spinner-border spinner-border-sm" />
-                      : u.isActive ? 'Deactivate' : 'Activate'}
-                  </button>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.5rem' }}>
+                    <button type="button" onClick={() => handleEdit(u)} className="admin-card-btn" style={{ background: 'var(--blue-50)', color: 'var(--primary)' }}>Edit</button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggle(u)}
+                      disabled={toggling === u._id}
+                      aria-label={u.isActive ? `Deactivate ${u.name}` : `Activate ${u.name}`}
+                      className="admin-card-btn admin-user-card-toggle"
+                    >
+                      {toggling === u._id ? <span className="spinner-border spinner-border-sm" /> : u.isActive ? 'Deactivate' : 'Activate'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(u)}
+                      disabled={deletingId === u._id}
+                      className="admin-card-btn"
+                      style={{ background: '#fef2f2', color: '#dc2626' }}
+                    >
+                      {deletingId === u._id ? <span className="spinner-border spinner-border-sm" /> : 'Delete'}
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
           </>
         )}
       </div>
+
+      {editingUser && (
+        <EditUserModal
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+          onSuccess={fetchUsers}
+        />
+      )}
     </div>
   );
 }

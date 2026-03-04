@@ -17,129 +17,115 @@ const schema = z.object({
   isActive: z.boolean().optional(),
 });
 
-/* ── QR Print / Download Modal ─────────────────────────────────────────────── */
+/* ── QR Print / Download Modal (same design for both download and print) ─────── */
 function QRModal({ ambulance, qrBase64, onClose }) {
+  const toast = useToast();
+  /** Builds the same QR card canvas as download; resolves with canvas when ready. */
+  const buildCardCanvas = () =>
+    new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const width = 900;
+      const height = 1400;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#061727';
+      ctx.fillRect(0, 0, width, height);
+
+      const centerX = width / 2;
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#f9fafb';
+      ctx.font = 'bold 40px "Segoe UI", sans-serif';
+      ctx.fillText('MAPIMS AMBULANCE', centerX, 280);
+      ctx.fillText('CHECKLIST', centerX, 340);
+
+      const plateText = ambulance.numberPlate;
+      ctx.font = 'bold 30px "Consolas", monospace';
+      ctx.fillStyle = '#e5e7eb';
+      ctx.fillText(plateText, centerX, 400);
+
+      const qrImg = new Image();
+      const logoImg = new Image();
+      let loaded = 0;
+
+      const handleReady = () => {
+        loaded += 1;
+        if (loaded < 2) return;
+
+        const maxLogoWidth = 450;
+        const maxLogoHeight = 220;
+        const scale = Math.min(maxLogoWidth / logoImg.width, maxLogoHeight / logoImg.height);
+        const logoW = logoImg.width * scale;
+        const logoH = logoImg.height * scale;
+        const logoX = centerX - logoW / 2;
+        const logoY = 50;
+        ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+
+        const qrSize = 480;
+        const qrY = 480;
+        const qrX = centerX - qrSize / 2;
+
+        ctx.fillStyle = '#0b2138';
+        ctx.strokeStyle = '#d1d5db';
+        ctx.lineWidth = 6;
+        ctx.roundRect(qrX - 28, qrY - 28, qrSize + 56, qrSize + 56, 44);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+        ctx.fillStyle = '#e5e7eb';
+        ctx.font = 'bold 28px "Segoe UI", sans-serif';
+        ctx.fillText('Scan to begin audit.', centerX, qrY + qrSize + 120);
+
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '18px "Segoe UI", sans-serif';
+        ctx.fillText('Authorized Medical Operations', centerX, height - 120);
+
+        resolve(canvas);
+      };
+
+      qrImg.onerror = () => reject(new Error('Failed to load QR image'));
+      logoImg.onerror = () => reject(new Error('Failed to load logo'));
+      qrImg.onload = handleReady;
+      logoImg.onload = handleReady;
+      qrImg.src = qrBase64;
+      logoImg.src = mapimsLogo;
+    });
+
   const handlePrint = () => {
-    const win = window.open('', '_blank');
-    win.document.write(`
-      <html><head><title>QR — ${ambulance.numberPlate}</title>
-      <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 40px; background: #fff; }
-        .title { font-size: 1.4rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 1rem; }
-        .plate { font-family: monospace; font-size: 2rem; font-weight: 900; letter-spacing: .1em;
-                 background: #1a1a2e; color: #fff; padding: .5rem 1.5rem; border-radius: 8px;
-                 display: inline-block; margin-bottom: 8px; box-shadow: 3px 3px 0 #dc2626; }
-        .badge { display: inline-block; background: ${TYPE_COLOR[ambulance.type]}22; color: ${TYPE_COLOR[ambulance.type]};
-                 border-radius: 99px; padding: .2rem .8rem; font-size: .85rem; font-weight: 700; margin: 4px; }
-        img { border: 3px solid #1a1a2e; border-radius: 12px; margin: 20px auto; display: block; }
-        .hint { font-size: .8rem; color: #4b5563; margin-top: 8px; }
-        .footer { margin-top: 24px; font-size: .8rem; color: #6b7280; }
-        .footer-plate { font-family: monospace; font-weight: 800; letter-spacing: .18em; margin-top: 4px; }
-      </style></head><body>
-        <div class="title">MAPIMS Ambulance Checklist</div>
-        <div class="plate">${ambulance.numberPlate}</div><br/>
-        <span class="badge">${TYPE_ICON[ambulance.type]} ${ambulance.type}</span>
-        ${ambulance.station ? `<span class="badge">📍 ${ambulance.station}</span>` : ''}
-        <img src="${qrBase64}" style="width:220px"/>
-        <p class="hint">Please scan this QR code to start the ambulance audit.</p>
-        <div class="footer">
-          Plate number
-          <div class="footer-plate">${ambulance.numberPlate}</div>
-        </div>
-      </body></html>`);
-    win.document.close();
-    win.print();
+    buildCardCanvas()
+      .then((canvas) => {
+        const dataUrl = canvas.toDataURL('image/png');
+        const win = window.open('', '_blank');
+        win.document.write(`
+          <!DOCTYPE html>
+          <html><head><title>QR — ${ambulance.numberPlate}</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { background: #061727; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+            img { max-width: 100%; height: auto; display: block; }
+          </style></head>
+          <body><img src="${dataUrl}" alt="QR card" onload="window.print()" /></body></html>`);
+        win.document.close();
+      })
+      .catch(() => toast('Could not load image for print', 'error'));
   };
 
   const handleDownloadCard = () => {
-    const canvas = document.createElement('canvas');
-    const width = 900;
-    const height = 1400;
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-
-    // Background (deep navy)
-    ctx.fillStyle = '#061727';
-    ctx.fillRect(0, 0, width, height);
-
-    const centerX = width / 2;
-
-    // Title block (MAPIMS Ambulance Checklist)
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#f9fafb';
-    ctx.font = 'bold 40px "Segoe UI", sans-serif';
-    ctx.fillText('MAPIMS AMBULANCE', centerX, 280);
-    ctx.fillText('CHECKLIST', centerX, 340);
-
-    // Plate text under title
-    const plateText = ambulance.numberPlate;
-    ctx.font = 'bold 30px "Consolas", monospace';
-    ctx.fillStyle = '#e5e7eb';
-    ctx.fillText(plateText, centerX, 400);
-
-    // Load logo and QR, then draw once both are ready
-    const qrImg = new Image();
-    const logoImg = new Image();
-    let loaded = 0;
-
-    const handleReady = () => {
-      loaded += 1;
-      if (loaded < 2) return;
-
-      // Logo in top-center area (proportional, larger)
-      const maxLogoWidth = 450;
-      const maxLogoHeight = 220;
-      const scale = Math.min(maxLogoWidth / logoImg.width, maxLogoHeight / logoImg.height);
-      const logoW = logoImg.width * scale;
-      const logoH = logoImg.height * scale;
-      
-      const logoX = centerX - logoW / 2;
-      const logoY = 50;
-      ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
-
-      // QR image in the middle
-      const qrSize = 480;
-      const qrY = 480;
-      const qrX = centerX - qrSize / 2;
-
-      // QR border card
-      ctx.fillStyle = '#0b2138';
-      ctx.strokeStyle = '#d1d5db';
-      ctx.lineWidth = 6;
-      ctx.roundRect(qrX - 28, qrY - 28, qrSize + 56, qrSize + 56, 44);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
-
-      // Hint text (bigger, bold)
-      ctx.fillStyle = '#e5e7eb';
-      ctx.font = 'bold 28px "Segoe UI", sans-serif';
-      ctx.fillText(
-        'Scan to begin audit.',
-        centerX,
-        qrY + qrSize + 120
-      );
-
-      // Footer text
-      ctx.fillStyle = '#9ca3af';
-      ctx.font = '18px "Segoe UI", sans-serif';
-      ctx.fillText('Authorized Medical Operations', centerX, height - 120);
-
-      const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/png');
-      link.download = `mapims-qr-${ambulance.numberPlate}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    };
-
-    qrImg.onload = handleReady;
-    logoImg.onload = handleReady;
-    qrImg.src = qrBase64;
-    logoImg.src = mapimsLogo;
+    buildCardCanvas()
+      .then((canvas) => {
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = `mapims-qr-${ambulance.numberPlate}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      })
+      .catch(() => toast('Could not load image for download', 'error'));
   };
 
   return (
@@ -362,19 +348,19 @@ export default function AmbulanceMaster() {
   };
 
   const handleViewQR = async (amb) => {
-    // Use cached QR or re-generate via rotate if missing
     if (qrCache[amb.numberPlate]) {
       setQrModal({ ambulance: amb, qrBase64: qrCache[amb.numberPlate] });
-    } else {
-      // No QR in cache, rotate to generate one
-      setRotating(amb._id);
-      try {
-        const { data } = await api.post(`/ambulances/${amb._id}/rotate-qr`);
-        setQrCache((c) => ({ ...c, [amb.numberPlate]: data.qrBase64 }));
-        setQrModal({ ambulance: amb, qrBase64: data.qrBase64 });
-        toast(`QR generated for ${amb.numberPlate}`, 'info');
-      } catch (e) { toast('Could not load QR', 'error'); }
-      finally { setRotating(null); }
+      return;
+    }
+    setRotating(amb._id);
+    try {
+      const { data } = await api.get(`/ambulances/${amb._id}/qr`);
+      setQrCache((c) => ({ ...c, [amb.numberPlate]: data.qrBase64 }));
+      setQrModal({ ambulance: amb, qrBase64: data.qrBase64 });
+    } catch (e) {
+      toast(e.response?.data?.message ?? 'Could not load QR', 'error');
+    } finally {
+      setRotating(null);
     }
   };
 

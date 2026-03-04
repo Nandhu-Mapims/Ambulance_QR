@@ -216,8 +216,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* EMT quick-start CTA */}
-      {hasRole('EMT') && (
+      {/* EMT quick-start CTA — hidden so you can change later; was: "Scan the QR sticker on any ambulance to begin" */}
+      {false && hasRole('EMT') && (
         <div className="mt-4 anim-fade-up anim-delay-3">
           <Link to="/scan" style={{ textDecoration: 'none' }}>
             <div style={{

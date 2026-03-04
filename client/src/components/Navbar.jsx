@@ -55,7 +55,7 @@ export default function Navbar() {
             <>
               <ul className="navbar-nav me-auto gap-1">
                 {nl('/dashboard', 'Home', '🏠')}
-                {hasRole('EMT')                               && nl('/scan',               'Scan QR',      '📷')}
+                {hasRole('EMT')                               && nl('/scan',               'Start Audit',  '📷')}
                 {hasRole('ADMIN')                             && nl('/admin/ambulances',   'Ambulances',   '🚑')}
                 {hasRole('ADMIN')                             && nl('/admin/templates',    'Templates',    '📋')}
                 {hasRole('ADMIN')                             && nl('/admin/users',        'Users',        '👤')}

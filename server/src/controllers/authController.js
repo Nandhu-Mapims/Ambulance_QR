@@ -126,4 +126,45 @@ const toggleUserStatus = async (req, res, next) => {
   res.json({ success: true, user });
 };
 
-module.exports = { register, login, refresh, logout, getMe, listUsers, toggleUserStatus };
+/** Update user profile (name, email, role, station) and optionally set new password. ADMIN only. */
+const updateUser = async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    const err = new Error('User not found');
+    err.statusCode = 404;
+    return next(err);
+  }
+  const { name, email, role, station, newPassword } = req.body;
+  if (name !== undefined) user.name = name;
+  if (email !== undefined) {
+    const existing = await User.findOne({ email, _id: { $ne: user._id } });
+    if (existing) {
+      const err = new Error('Email is already registered');
+      err.statusCode = 409;
+      return next(err);
+    }
+    user.email = email;
+  }
+  if (role !== undefined) user.role = role;
+  if (station !== undefined) user.station = station;
+  if (newPassword && typeof newPassword === 'string' && newPassword.length >= 6) {
+    user.password = newPassword;
+  }
+  await user.save();
+  logger.info({ userId: user._id }, 'User updated');
+  res.json({ success: true, user });
+};
+
+/** Delete user. ADMIN only. */
+const deleteUser = async (req, res, next) => {
+  const user = await User.findByIdAndDelete(req.params.id);
+  if (!user) {
+    const err = new Error('User not found');
+    err.statusCode = 404;
+    return next(err);
+  }
+  logger.info({ userId: user._id }, 'User deleted');
+  res.json({ success: true, message: 'User deleted' });
+};
+
+module.exports = { register, login, refresh, logout, getMe, listUsers, toggleUserStatus, updateUser, deleteUser };

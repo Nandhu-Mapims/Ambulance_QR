@@ -56,7 +56,8 @@ export default function AuditLanding() {
           <h3 className="text-danger mt-3">Invalid QR Code</h3>
           <p className="text-muted">{error}</p>
           <p className="small text-muted">The QR token may have been rotated by an administrator.</p>
-          <Link to="/scan" className="btn btn-outline-danger mt-2">Manually Enter Details</Link>
+          {/* Manual entry link hidden so you can change later */}
+          {false && <Link to="/scan" className="btn btn-outline-danger mt-2">Manually Enter Details</Link>}
         </div>
       </div>
     );

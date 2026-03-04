@@ -17,6 +17,8 @@ const ambulanceSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     // SHA-256 hash of the raw QR token (raw token is never stored)
     qrTokenHash: { type: String, default: null, select: false },
+    // Current QR image (data URL) so we can return it without rotating
+    qrImageBase64: { type: String, default: null, select: false },
     lastQrRotatedAt: { type: Date, default: null },
   },
   { timestamps: true }

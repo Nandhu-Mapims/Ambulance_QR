@@ -7,11 +7,13 @@ const {
   getMe,
   listUsers,
   toggleUserStatus,
+  updateUser,
+  deleteUser,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 const { authorize } = require('../middleware/roles');
 const { validate } = require('../middleware/validate');
-const { registerSchema, loginSchema, refreshSchema } = require('../schemas/authSchemas');
+const { registerSchema, loginSchema, refreshSchema, updateUserSchema } = require('../schemas/authSchemas');
 const asyncHandler = require('../utils/asyncHandler');
 
 const router = Router();
@@ -24,5 +26,7 @@ router.post('/logout', protect, asyncHandler(logout));
 router.get('/me', protect, asyncHandler(getMe));
 router.get('/users', protect, authorize('ADMIN'), asyncHandler(listUsers));
 router.patch('/users/:id/status', protect, authorize('ADMIN'), asyncHandler(toggleUserStatus));
+router.put('/users/:id', protect, authorize('ADMIN'), validate(updateUserSchema), asyncHandler(updateUser));
+router.delete('/users/:id', protect, authorize('ADMIN'), asyncHandler(deleteUser));
 
 module.exports = router;

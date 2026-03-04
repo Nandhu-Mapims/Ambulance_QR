@@ -913,8 +913,16 @@ function TemplateWizard({ editTemplate, onSuccess, onCancel, initialType, initia
 /* ═══════════════════════════════════════════════════════════════════════════
    TEMPLATE CARD (existing templates list)
 ═══════════════════════════════════════════════════════════════════════════ */
-function TemplateCard({ tpl, onActivate, onEdit }) {
+function TemplateCard({ tpl, onActivate, onEdit, onDelete }) {
   const [expanded, setExpanded] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteClick = () => {
+    if (!window.confirm(`Delete template "${tpl.name}" (v${tpl.version})? This cannot be undone.`)) return;
+    setDeleting(true);
+    onDelete?.(tpl._id)
+      .finally(() => setDeleting(false));
+  };
 
   return (
     <div className={`admin-template-card ${tpl.isActive ? 'admin-template-card--active' : ''}`}>
@@ -963,6 +971,18 @@ function TemplateCard({ tpl, onActivate, onEdit }) {
           {!tpl.isActive && (
             <button type="button" className="admin-template-card-btn admin-template-card-btn--activate" onClick={() => onActivate(tpl._id)}>
               Activate
+            </button>
+          )}
+          {!tpl.isActive && (
+            <button
+              type="button"
+              className="admin-template-card-btn"
+              style={{ borderColor: '#fecaca', background: '#fef2f2', color: '#dc2626' }}
+              onClick={handleDeleteClick}
+              disabled={deleting}
+              aria-label={`Delete ${tpl.name}`}
+            >
+              {deleting ? <span className="spinner-border spinner-border-sm" style={{ width: 12, height: 12 }} /> : 'Delete'}
             </button>
           )}
         </div>
@@ -1057,6 +1077,17 @@ export default function TemplateBuilder() {
     await fetchTemplates();
   };
 
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/templates/${id}`);
+      toast('Template deleted', 'success');
+      await fetchTemplates();
+    } catch (e) {
+      toast(e.response?.data?.message ?? 'Delete failed', 'error');
+      throw e;
+    }
+  };
+
   const filtered = typeFilter ? templates.filter((t) => t.ambulanceType === typeFilter) : templates;
 
   return (
@@ -1137,7 +1168,7 @@ export default function TemplateBuilder() {
         ) : (
           <div className="admin-templates-cards">
             {filtered.map((t) => (
-              <TemplateCard key={t._id} tpl={t} onActivate={handleActivate} onEdit={handleEdit} />
+              <TemplateCard key={t._id} tpl={t} onActivate={handleActivate} onEdit={handleEdit} onDelete={handleDelete} />
             ))}
           </div>
         )

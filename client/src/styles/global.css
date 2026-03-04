@@ -1942,6 +1942,49 @@ code, kbd, pre, samp,
 
 .admin-qr-modal-print { flex: 1; font-size: 0.875rem; min-height: 44px; }
 
+/* Edit User Modal */
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-page);
+}
+.admin-modal {
+  background: var(--card-bg);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+}
+.admin-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--card-border);
+}
+.admin-modal-title { margin: 0; font-size: 1rem; font-weight: 700; color: var(--primary-dark); }
+.admin-modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--sidebar-text-dim);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+.admin-modal-close:hover { background: var(--slate-100); color: var(--primary-dark); }
+.admin-modal-body { padding: 1.25rem; }
+.admin-modal-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--card-border); }
+
 /* User Management role pills */
 .admin-role-filters { flex-wrap: wrap; }
 .admin-role-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }

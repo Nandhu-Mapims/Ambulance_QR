@@ -2,6 +2,9 @@
  * EMT Scan page: open camera to scan ambulance QR, or enter number plate manually.
  * QR codes encode the audit fill URL (e.g. /audit/:numberPlate/fill?t=token).
  * Manual entry navigates to /audit/:numberPlate; AuditLanding resolves token or prompts.
+ *
+ * Set HIDE_SCAN_AND_MANUAL_ENTRY to true to show a placeholder only (scan QR and manual
+ * entry UI hidden so you can change this page later).
  */
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +12,9 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Html5Qrcode } from 'html5-qrcode';
+
+/** Set to true to hide Scan QR and Manual Entry; show placeholder only. Set to false to restore. */
+const HIDE_SCAN_AND_MANUAL_ENTRY = true;
 
 const SCANNER_ELEMENT_ID = 'audit-scan-reader';
 const SCANNER_QRBOX = { width: 260, height: 260 };
@@ -122,6 +128,22 @@ export default function AuditScan() {
     try { localStorage.setItem('recentPlates', JSON.stringify(updated)); } catch { /* ignore */ }
     navigate(`/audit/${encodeURIComponent(plate)}`);
   };
+
+  if (HIDE_SCAN_AND_MANUAL_ENTRY) {
+    return (
+      <div className="row justify-content-center mt-4 audit-scan-wrap">
+        <div className="col-12 col-md-6 col-lg-4 px-2 px-md-3">
+          <div className="text-center">
+            <div style={{ fontSize: '3rem' }}>📷</div>
+            <h3 className="fw-bold mt-3">Start Audit</h3>
+            <p className="text-muted mt-2 mb-0" style={{ fontSize: '1rem' }}>
+              Please scan the QR code on the ambulance to fill the audit form.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="row justify-content-center mt-4 audit-scan-wrap">

@@ -11,7 +11,7 @@ const MOBILE_BREAKPOINT = 768;
 
 const ITEMS = [
   { to: '/dashboard', icon: '📊', label: 'Home' },
-  { to: '/scan', icon: '📷', label: 'Scan', roles: ['EMT'] },
+  { to: '/scan', icon: '📷', label: 'Start Audit', roles: ['EMT'] },
   { to: '/admin/ambulances', icon: '🚑', label: 'Ambulances', roles: ['ADMIN'] },
   { to: '/admin/templates', icon: '📄', label: 'Templates', roles: ['ADMIN'] },
   { to: '/supervisor/actions', icon: '⚠️', label: 'Issues', roles: ['SUPERVISOR', 'ADMIN'] },

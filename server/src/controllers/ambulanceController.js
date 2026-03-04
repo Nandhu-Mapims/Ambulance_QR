@@ -53,9 +53,10 @@ const createAmbulance = async (req, res, next) => {
 
   const ambulance = await Ambulance.create({ numberPlate, type, station });
 
-  // Generate initial QR
+  // Generate initial QR and store image so "view QR" doesn't rotate every time
   const { token, qrBase64 } = await buildQr(ambulance);
   ambulance.qrTokenHash = hashToken(token);
+  ambulance.qrImageBase64 = qrBase64;
   ambulance.lastQrRotatedAt = new Date();
   await ambulance.save();
 
@@ -87,8 +88,29 @@ const deleteAmbulance = async (req, res, next) => {
   res.json({ success: true, message: 'Ambulance deleted' });
 };
 
+/** Get current QR image without rotating. Uses stored image from create/rotate. */
+const getQr = async (req, res, next) => {
+  const ambulance = await Ambulance.findById(req.params.id).select('+qrImageBase64');
+  if (!ambulance) {
+    const err = new Error('Ambulance not found');
+    err.statusCode = 404;
+    return next(err);
+  }
+  let qrBase64 = ambulance.qrImageBase64;
+  // Legacy: no stored image — generate once and store (same as rotate, then return)
+  if (!qrBase64) {
+    const { token, qrBase64: generated } = await buildQr(ambulance);
+    ambulance.qrTokenHash = hashToken(token);
+    ambulance.qrImageBase64 = generated;
+    ambulance.lastQrRotatedAt = new Date();
+    await ambulance.save();
+    qrBase64 = generated;
+  }
+  res.json({ success: true, qrBase64 });
+};
+
 const rotateQr = async (req, res, next) => {
-  const ambulance = await Ambulance.findById(req.params.id).select('+qrTokenHash');
+  const ambulance = await Ambulance.findById(req.params.id).select('+qrTokenHash +qrImageBase64');
   if (!ambulance) {
     const err = new Error('Ambulance not found');
     err.statusCode = 404;
@@ -97,6 +119,7 @@ const rotateQr = async (req, res, next) => {
 
   const { token, qrBase64 } = await buildQr(ambulance);
   ambulance.qrTokenHash = hashToken(token);
+  ambulance.qrImageBase64 = qrBase64;
   ambulance.lastQrRotatedAt = new Date();
   await ambulance.save();
 
@@ -169,6 +192,7 @@ module.exports = {
   createAmbulance,
   updateAmbulance,
   deleteAmbulance,
+  getQr,
   rotateQr,
   resolveQr,
 };

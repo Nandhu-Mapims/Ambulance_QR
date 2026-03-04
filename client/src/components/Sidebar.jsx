@@ -13,7 +13,7 @@ const MENU = [
     label: 'EMT',
     roles: ['EMT'],
     items: [
-      { to: '/scan',   icon: '📱', label: 'Scan QR' },
+      { to: '/scan',   icon: '📱', label: 'Start Audit' },
       { to: '/audits', icon: '📋', label: 'My Audits' },
     ],
   },
