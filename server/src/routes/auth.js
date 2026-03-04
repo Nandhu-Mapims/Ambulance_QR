@@ -18,8 +18,14 @@ const asyncHandler = require('../utils/asyncHandler');
 
 const router = Router();
 
-// First admin seed OR admin-only registration
-router.post('/register', validate(registerSchema), asyncHandler(register));
+// Register new users — ADMIN only (first admin is seeded via seed.js)
+router.post(
+  '/register',
+  protect,
+  authorize('ADMIN'),
+  validate(registerSchema),
+  asyncHandler(register)
+);
 router.post('/login', validate(loginSchema), asyncHandler(login));
 router.post('/refresh', validate(refreshSchema), asyncHandler(refresh));
 router.post('/logout', protect, asyncHandler(logout));

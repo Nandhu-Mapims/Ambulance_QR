@@ -8,17 +8,8 @@ const {
 } = require('../utils/tokenUtils');
 const logger = require('../utils/logger');
 
-/** Seed the first ADMIN or register subsequent users (ADMIN only). */
+/** Register new users (route is ADMIN-only). */
 const register = async (req, res, next) => {
-  const totalUsers = await User.countDocuments();
-
-  // Bootstrap: allow first user creation without auth
-  if (totalUsers > 0 && (!req.user || req.user.role !== 'ADMIN')) {
-    const err = new Error('Only ADMIN can register new users');
-    err.statusCode = 403;
-    return next(err);
-  }
-
   const { name, email, password, role, station } = req.body;
 
   const existing = await User.findOne({ email });

@@ -1,5 +1,6 @@
+version: "3.9"
+
 services:
-  # MongoDB — data in volume mongo_data (your old data if volume still exists)
   mongo:
     image: mongo:7
     container_name: ambulance_mongo
@@ -18,7 +19,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # API server — uses Docker MongoDB (old data)
   server:
     build:
       context: ./server
@@ -28,11 +28,8 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
-    env_file: ./server/.env
-    environment:
-      MONGO_URI: mongodb://ambulance_mongo:27017/ambulance_qr
-      CLIENT_URL: http://194.238.22.210:8085
-      NODE_ENV: production
+    env_file:
+      - ./server/.env
     volumes:
       - uploads_data:/app/uploads
     ports:
@@ -40,13 +37,12 @@ services:
     networks:
       - app_net
 
-  # React client
   client:
     build:
       context: ./client
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://194.238.22.210:5010/api
+        VITE_API_URL: /api
     container_name: ambulance_client
     restart: unless-stopped
     depends_on:
