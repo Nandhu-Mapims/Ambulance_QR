@@ -33,10 +33,10 @@ export default function Login() {
   const [searchParams] = useSearchParams();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { email: 'admin@ambuqr.com', password: 'Admin@123' },
   });
 
   const returnTo = searchParams.get('returnTo');
@@ -156,21 +156,54 @@ export default function Login() {
                 <label style={{ display: 'block', fontWeight: 600, fontSize: '.875rem', marginBottom: '.5rem' }}>
                   Password
                 </label>
-                <input
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  {...register('password')}
-                  style={{
-                    width: '100%', padding: '.7rem 1rem',
-                    border: `1.5px solid ${errors.password ? '#fca5a5' : '#e5e7eb'}`,
-                    borderRadius: 10, fontSize: '.9rem',
-                    outline: 'none', transition: 'all .2s',
-                    background: errors.password ? '#fff5f5' : '#f9fafb',
-                  }}
-                  onFocus={(e) => { e.target.style.borderColor = '#2563eb'; e.target.style.background = '#fff'; e.target.style.boxShadow = '0 0 0 4px rgba(29,78,216,.12)'; }}
-                  onBlur={(e) => { e.target.style.borderColor = errors.password ? '#93c5fd' : '#e2e8f0'; e.target.style.background = errors.password ? '#eff6ff' : '#f9fafb'; e.target.style.boxShadow = 'none'; }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    {...register('password')}
+                    style={{
+                      width: '100%', padding: '.7rem 2.75rem .7rem 1rem',
+                      border: `1.5px solid ${errors.password ? '#fca5a5' : '#e5e7eb'}`,
+                      borderRadius: 10, fontSize: '.9rem',
+                      outline: 'none', transition: 'all .2s',
+                      background: errors.password ? '#fff5f5' : '#f9fafb',
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = '#2563eb'; e.target.style.background = '#fff'; e.target.style.boxShadow = '0 0 0 4px rgba(29,78,216,.12)'; }}
+                    onBlur={(e) => { e.target.style.borderColor = errors.password ? '#93c5fd' : '#e2e8f0'; e.target.style.background = errors.password ? '#eff6ff' : '#f9fafb'; e.target.style.boxShadow = 'none'; }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    style={{
+                      position: 'absolute',
+                      right: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      padding: '.25rem',
+                      cursor: 'pointer',
+                      color: '#6b7280',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {showPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 {errors.password && <p style={{ color: '#1d4ed8', fontSize: '.8rem', marginTop: '.25rem', marginBottom: 0 }}>{errors.password.message}</p>}
               </div>
 
@@ -192,22 +225,6 @@ export default function Login() {
             <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '.8rem', marginTop: '1.5rem', marginBottom: 0 }}>
               Contact your administrator to get an account
             </p>
-          </div>
-
-          {/* Demo credentials — all roles */}
-          <div style={{
-            marginTop: '1rem', padding: '.85rem 1rem',
-            background: 'rgba(29,78,216,.06)', borderRadius: 12,
-            border: '1px solid rgba(29,78,216,.15)', fontSize: '.75rem', color: '#475569',
-            lineHeight: 1.6,
-          }}>
-            <strong style={{ color: '#1d4ed8' }}>Demo logins</strong>
-            <div style={{ marginTop: '.4rem' }}>
-              <div>Admin: admin@ambuqr.com / Admin@123</div>
-              <div>Supervisor: sup.ali@ambuqr.com or sup.nisa@ambuqr.com / Super@123</div>
-              <div>EMT: emt.karim@ambuqr.com or emt.farid@ambuqr.com or emt.layla@ambuqr.com / Emt@1234</div>
-              <div>Auditor (Assessor): assessor@ambuqr.com / View@1234</div>
-            </div>
           </div>
         </div>
       </div>
