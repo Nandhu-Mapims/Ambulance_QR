@@ -78,6 +78,9 @@ export default function Login() {
       <div className="login-brand">
         <div className="login-brand-content anim-fade-up">
           <div style={{ fontSize: '5rem', marginBottom: '1rem', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,.3))' }}>🚑</div>
+          <p style={{ opacity: .9, fontSize: '1.1rem', fontWeight: 700, letterSpacing: '.12em', marginBottom: '.35rem', textTransform: 'uppercase' }}>
+            MAPIMS
+          </p>
           <h1 style={{ fontSize: '2rem', fontWeight: 900, letterSpacing: '-.04em', marginBottom: '.5rem' }}>
             AmbulanceQR
           </h1>
