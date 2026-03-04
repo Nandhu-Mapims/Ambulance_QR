@@ -106,6 +106,25 @@ const activateTemplate = async (req, res, next) => {
   res.json({ success: true, template });
 };
 
+const deactivateTemplate = async (req, res, next) => {
+  const template = await ChecklistTemplate.findById(req.params.id);
+  if (!template) {
+    const err = new Error('Template not found');
+    err.statusCode = 404;
+    return next(err);
+  }
+  if (!template.isActive) {
+    return res.json({ success: true, template });
+  }
+  template.isActive = false;
+  await template.save();
+  logger.info(
+    { templateId: template._id, type: template.ambulanceType },
+    'Template deactivated'
+  );
+  res.json({ success: true, template });
+};
+
 const deleteTemplate = async (req, res, next) => {
   const template = await ChecklistTemplate.findById(req.params.id);
   if (!template) {
@@ -130,5 +149,6 @@ module.exports = {
   createTemplate,
   updateTemplate,
   activateTemplate,
+  deactivateTemplate,
   deleteTemplate,
 };

@@ -224,15 +224,17 @@ function AmbulanceRow({ amb, onRotate, onToggle, onViewQR, onDelete, rotating, d
           <button
             type="button"
             onClick={() => onRotate(amb)}
-            disabled={rotating === amb._id}
+            disabled={rotating != null && String(rotating) === String(amb._id)}
             aria-label={`Rotate QR for ${amb.numberPlate}`}
             style={{
               padding: '.4rem .6rem', borderRadius: 'var(--radius-sm)', fontSize: '.75rem', fontWeight: 600,
-              border: '1px solid var(--card-border)', background: 'var(--slate-50)', color: 'var(--sidebar-text-dim)',
-              cursor: rotating === amb._id ? 'wait' : 'pointer', transition: 'var(--transition)',
+              border: '1px solid var(--primary)', background: 'var(--primary-light)', color: 'var(--primary-dark)',
+              cursor: rotating != null && String(rotating) === String(amb._id) ? 'wait' : 'pointer',
+              transition: 'var(--transition)',
+              opacity: rotating != null && String(rotating) === String(amb._id) ? 0.8 : 1,
             }}
           >
-            {rotating === amb._id ? <span className="spinner-border spinner-border-sm" /> : '🔄 Rotate'}
+            {rotating != null && String(rotating) === String(amb._id) ? <span className="spinner-border spinner-border-sm" /> : '🔄 Rotate'}
           </button>
           <button
             type="button"
@@ -309,14 +311,19 @@ export default function AmbulanceMaster() {
 
   const handleRotate = async (amb) => {
     if (!window.confirm(`Rotate QR for ${amb.numberPlate}? The old QR sticker will stop working.`)) return;
-    setRotating(amb._id);
+    const id = amb._id ?? amb.id;
+    setRotating(id);
     try {
-      const { data } = await api.post(`/ambulances/${amb._id}/rotate-qr`);
+      const { data } = await api.post(`/ambulances/${id}/rotate-qr`);
       setQrCache((c) => ({ ...c, [amb.numberPlate]: data.qrBase64 }));
       setQrModal({ ambulance: amb, qrBase64: data.qrBase64 });
+      setAmbulances((prev) => prev.map((a) => (String(a._id) === String(id) ? { ...a, lastQrRotatedAt: data.rotatedAt ?? new Date() } : a)));
       toast(`QR rotated for ${amb.numberPlate}`, 'success');
-    } catch (e) { toast(e.response?.data?.message || 'Rotation failed', 'error'); }
-    finally { setRotating(null); }
+    } catch (e) {
+      toast(e.response?.data?.message ?? 'Rotation failed', 'error');
+    } finally {
+      setRotating(null);
+    }
   };
 
   const handleToggle = async (amb) => {
@@ -530,8 +537,8 @@ export default function AmbulanceMaster() {
                     </div>
                     <div className="admin-card-actions">
                       <button type="button" className="admin-card-btn admin-card-btn--qr" onClick={() => handleViewQR(amb)}>📱 QR</button>
-                      <button type="button" className="admin-card-btn" onClick={() => handleRotate(amb)} disabled={rotating === amb._id}>
-                        {rotating === amb._id ? <span className="spinner-border spinner-border-sm" /> : '🔄 Rotate'}
+                      <button type="button" className="admin-card-btn admin-card-btn--rotate" onClick={() => handleRotate(amb)} disabled={rotating != null && String(rotating) === String(amb._id)}>
+                        {rotating != null && String(rotating) === String(amb._id) ? <span className="spinner-border spinner-border-sm" /> : '🔄 Rotate'}
                       </button>
                       <button type="button" className="admin-card-btn admin-card-btn--toggle" onClick={() => handleToggle(amb)}>
                         {amb.isActive ? '⏸ Deactivate' : '▶ Activate'}

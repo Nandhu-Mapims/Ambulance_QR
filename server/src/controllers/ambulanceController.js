@@ -3,13 +3,22 @@ const { generateQRCode } = require('../utils/qrGenerator');
 const { generateSecureToken, hashToken } = require('../utils/tokenUtils');
 const logger = require('../utils/logger');
 
+/** Always use HTTPS for scan/QR URLs (including localhost). */
+const normalizeClientUrl = (url) => {
+  if (!url || typeof url !== 'string') return 'https://localhost:5173';
+  const u = url.trim().replace(/\/+$/, '');
+  if (u.startsWith('https://')) return u;
+  if (u.startsWith('http://')) return u.replace(/^http:\/\//i, 'https://');
+  return u.startsWith('//') ? `https:${u}` : `https://${u}`;
+};
+
 /** Build the public QR URL that encodes into the QR image.
  * For security, QR codes point to the login page with a returnTo param,
  * so scanning always starts from the login screen (fresh EMT credentials)
- * and then redirects into the audit fill page.
+ * and then redirects into the audit fill page. Uses HTTPS for non-localhost.
  */
 const buildQrUrl = (numberPlate, token) => {
-  const base = process.env.CLIENT_URL || 'https://localhost:5173';
+  const base = normalizeClientUrl(process.env.CLIENT_URL || 'https://localhost:5173');
   const targetPath = `/audit/${encodeURIComponent(numberPlate)}/fill?t=${token}`;
   const encodedReturnTo = encodeURIComponent(targetPath);
   return `${base}/login?returnTo=${encodedReturnTo}`;

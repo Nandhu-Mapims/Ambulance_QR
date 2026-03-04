@@ -6,6 +6,7 @@ const {
   createTemplate,
   updateTemplate,
   activateTemplate,
+  deactivateTemplate,
   deleteTemplate,
 } = require('../controllers/templateController');
 const { protect } = require('../middleware/auth');
@@ -24,6 +25,7 @@ router.get('/:id', asyncHandler(getTemplate));
 router.post('/', authorize('ADMIN'), validate(createTemplateSchema), asyncHandler(createTemplate));
 router.put('/:id', authorize('ADMIN'), validate(updateTemplateSchema), asyncHandler(updateTemplate));
 router.post('/:id/activate', authorize('ADMIN'), asyncHandler(activateTemplate));
+router.post('/:id/deactivate', authorize('ADMIN'), asyncHandler(deactivateTemplate));
 router.delete('/:id', authorize('ADMIN'), asyncHandler(deleteTemplate));
 
 module.exports = router;

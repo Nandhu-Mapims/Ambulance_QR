@@ -58,12 +58,14 @@ export default function Login() {
       const from = location.state?.from?.pathname;
       navigate(returnTo ? decodeURIComponent(returnTo) : from || ROLE_HOME[user.role] || '/audits', { replace: true });
     } catch (err) {
+      const status = err.response?.status;
       let msg = err.response?.data?.message;
       if (!msg) {
         msg = (err.code === 'ERR_NETWORK' || err.message?.toLowerCase().includes('network'))
           ? 'Cannot reach server. Is the API running on port 5000?'
-          : 'Login failed. Check your credentials.';
+          : 'Invalid email or password.';
       }
+      if (status === 401) msg = 'Invalid email or password.';
       setError(msg);
     } finally {
       setLoading(false);
@@ -83,7 +85,7 @@ export default function Login() {
             Audit Management System
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem', width: '100%', maxWidth: 280 }}>
+          <div className="login-features" style={{ display: 'flex', flexDirection: 'column', gap: '.75rem', width: '100%', maxWidth: 280 }}>
             {FEATURES.map((f, i) => (
               <div
                 key={f.text}
@@ -104,8 +106,8 @@ export default function Login() {
 
       {/* ── Form panel ── */}
       <div className="login-form-side">
-        <div className="anim-slide-right" style={{ width: '100%', maxWidth: 420 }}>
-          <div style={{
+        <div className="anim-slide-right login-form-card-wrap" style={{ width: '100%', maxWidth: 420 }}>
+          <div className="login-form-card" style={{
             background: '#fff',
             borderRadius: 24,
             padding: '2.5rem',
@@ -119,13 +121,26 @@ export default function Login() {
             </div>
 
             {error && (
-              <div className="anim-fade-in" style={{
-                background: '#eff6ff', border: '1px solid #93c5fd',
-                borderRadius: 10, padding: '.75rem 1rem',
-                color: '#1e40af', fontSize: '.875rem',
-                marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '.5rem',
-              }}>
-                <span>⚠️</span> {error}
+              <div
+                className="anim-fade-in"
+                role="alert"
+                style={{
+                  background: error.toLowerCase().includes('invalid') || error.includes('credentials')
+                    ? '#fef2f2'
+                    : '#eff6ff',
+                  border: `1px solid ${error.toLowerCase().includes('invalid') || error.includes('credentials') ? '#fecaca' : '#93c5fd'}`,
+                  borderRadius: 10,
+                  padding: '.75rem 1rem',
+                  color: error.toLowerCase().includes('invalid') || error.includes('credentials') ? '#b91c1c' : '#1e40af',
+                  fontSize: '.875rem',
+                  marginBottom: '1.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '.5rem',
+                }}
+              >
+                <span aria-hidden>{error.toLowerCase().includes('invalid') || error.includes('credentials') ? '✕' : '⚠️'}</span>
+                {error}
               </div>
             )}
 

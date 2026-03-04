@@ -24,7 +24,7 @@ const TripAudit = require('./models/TripAudit');
 const CorrectiveAction = require('./models/CorrectiveAction');
 
 const MONGO_URI = process.env.MONGO_URI;
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const CLIENT_URL = process.env.CLIENT_URL || 'https://localhost:5173';
 const FRESH = process.argv.includes('--fresh');
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
@@ -79,7 +79,7 @@ const BLS_ALS_QUESTIONS = [
   { key: 'ventilator_accessories', label: 'Ventilator with accessories (circuit, mask, tubing)?', type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 8 },
   { key: 'suction_nebulizer',   label: 'Suction & nebulizer working?',                          type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 9 },
   { key: 'laryngoscope_sets',   label: 'Laryngoscope sets (handles, blades, batteries) available?', type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 10 },
-  { key: 'ambu_bag_sets',       label: 'AMBU bag sets (adult / pediatric / neonatal) available?', type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 11 },
+  { key: 'ambu_bag_sets',       label: 'AMBU bag sets (adult / pediatric) available?', type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 11 },
   { key: 'stretcher_bedsheets', label: 'Stretcher with bedsheets OK?',                         type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 12 },
   { key: 'emergency_medicine',  label: 'Emergency medicine available?',                        type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 13 },
   { key: 'bp_steth_cbg_thermo', label: 'BP, stethoscope, CBG & thermometer available?',         type: 'YESNO', required: true, requiresEvidenceIfNo: false, order: 14 },
@@ -271,7 +271,7 @@ async function seed() {
           patientId: `PT-${Math.floor(Math.random() * 90000 + 10000)}`,
           tripType:  def.tripType,
           from:      rnd(['Hospital A', 'Station HQ', 'Clinic North', 'Airport', 'Residence']),
-          to:        rnd(['Hospital B', 'ICU Ward', 'Specialist Centre', 'Hospital A', 'Station HQ']),
+          to:        rnd(['Hospital B', 'Emergency Dept', 'Specialist Centre', 'Hospital A', 'Station HQ']),
         },
         responses,
         complianceScore,

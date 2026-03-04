@@ -913,9 +913,10 @@ function TemplateWizard({ editTemplate, onSuccess, onCancel, initialType, initia
 /* ═══════════════════════════════════════════════════════════════════════════
    TEMPLATE CARD (existing templates list)
 ═══════════════════════════════════════════════════════════════════════════ */
-function TemplateCard({ tpl, onActivate, onEdit, onDelete }) {
+function TemplateCard({ tpl, onActivate, onDeactivate, onEdit, onDelete }) {
   const [expanded, setExpanded] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deactivating, setDeactivating] = useState(false);
 
   const handleDeleteClick = () => {
     if (!window.confirm(`Delete template "${tpl.name}" (v${tpl.version})? This cannot be undone.`)) return;
@@ -968,23 +969,32 @@ function TemplateCard({ tpl, onActivate, onEdit, onDelete }) {
           <button type="button" className="admin-template-card-btn admin-template-card-btn--edit" onClick={() => onEdit(tpl)}>
             Edit
           </button>
-          {!tpl.isActive && (
+          {tpl.isActive ? (
+            <button
+              type="button"
+              className="admin-template-card-btn"
+              style={{ borderColor: '#fcd34d', background: '#fffbeb', color: '#b45309' }}
+              onClick={() => { setDeactivating(true); onDeactivate?.(tpl._id)?.finally(() => setDeactivating(false)); }}
+              disabled={deactivating}
+              aria-label={`Deactivate ${tpl.name}`}
+            >
+              {deactivating ? <span className="spinner-border spinner-border-sm" style={{ width: 12, height: 12 }} /> : 'Deactivate'}
+            </button>
+          ) : (
             <button type="button" className="admin-template-card-btn admin-template-card-btn--activate" onClick={() => onActivate(tpl._id)}>
               Activate
             </button>
           )}
-          {!tpl.isActive && (
-            <button
-              type="button"
-              className="admin-template-card-btn"
-              style={{ borderColor: '#fecaca', background: '#fef2f2', color: '#dc2626' }}
-              onClick={handleDeleteClick}
-              disabled={deleting}
-              aria-label={`Delete ${tpl.name}`}
-            >
-              {deleting ? <span className="spinner-border spinner-border-sm" style={{ width: 12, height: 12 }} /> : 'Delete'}
-            </button>
-          )}
+          <button
+            type="button"
+            className="admin-template-card-btn"
+            style={{ borderColor: '#fecaca', background: '#fef2f2', color: '#dc2626' }}
+            onClick={handleDeleteClick}
+            disabled={deleting}
+            aria-label={`Delete ${tpl.name}`}
+          >
+            {deleting ? <span className="spinner-border spinner-border-sm" style={{ width: 12, height: 12 }} /> : 'Delete'}
+          </button>
         </div>
       </div>
 
@@ -1046,7 +1056,18 @@ export default function TemplateBuilder() {
       toast('Template activated', 'success');
       await fetchTemplates();
     } catch (e) {
-      toast(e.response?.data?.message || 'Activation failed', 'error');
+      toast(e.response?.data?.message ?? 'Activation failed', 'error');
+    }
+  };
+
+  const handleDeactivate = async (id) => {
+    try {
+      await api.post(`/templates/${id}/deactivate`);
+      toast('Template deactivated', 'success');
+      await fetchTemplates();
+    } catch (e) {
+      toast(e.response?.data?.message ?? 'Deactivation failed', 'error');
+      throw e;
     }
   };
 
@@ -1168,7 +1189,7 @@ export default function TemplateBuilder() {
         ) : (
           <div className="admin-templates-cards">
             {filtered.map((t) => (
-              <TemplateCard key={t._id} tpl={t} onActivate={handleActivate} onEdit={handleEdit} onDelete={handleDelete} />
+              <TemplateCard key={t._id} tpl={t} onActivate={handleActivate} onDeactivate={handleDeactivate} onEdit={handleEdit} onDelete={handleDelete} />
             ))}
           </div>
         )
