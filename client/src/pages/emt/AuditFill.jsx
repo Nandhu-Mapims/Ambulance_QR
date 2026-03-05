@@ -222,7 +222,6 @@ export default function AuditFill() {
         ambulanceNumberPlate: ambulance.numberPlate,
         templateId: template._id,
         tripMeta: {
-          patientId: formData.patientId || '',
           tripType: formData.tripType || 'EMERGENCY',
           from: formData.from || '',
           to: formData.to || '',
@@ -300,10 +299,6 @@ export default function AuditFill() {
               </div>
               <div className="card-body">
                 <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label">Patient ID</label>
-                    <input type="text" className="form-control" {...register('patientId')} placeholder="e.g. PT-20240101" />
-                  </div>
                   <div className="col-md-6">
                     <label className="form-label">Trip Type</label>
                     <select className="form-select" {...register('tripType')}>

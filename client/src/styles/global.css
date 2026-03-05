@@ -1030,9 +1030,27 @@ code, kbd, pre, samp,
   color: #0f172a;
 }
 
+.app-header-logout {
+  margin-left: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  background: transparent;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.app-header-logout:hover {
+  background: var(--blue-50);
+  color: var(--primary-dark, #1e40af);
+}
+
 @media (max-width: 768px) {
   .app-header-name { font-size: 12px; }
   .app-header-user { padding: 0.2rem 0.4rem 0.2rem 0.25rem; }
+  .app-header-logout { padding: 0.3rem 0.6rem; font-size: 12px; }
 }
 
 /* ── Mobile bottom navigation ─────────────────────────────────────────────────── */

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { ToastProvider } from './context/ToastContext';
+import { ToastProvider, useToast } from './context/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Sidebar from './components/Sidebar';
 import MobileBottomNav, { MOBILE_BREAKPOINT } from './components/MobileBottomNav';
@@ -54,8 +54,10 @@ export default function App() {
 function AuthedLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT);
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const toast = useToast();
 
   useEffect(() => {
     const onResize = () => {
@@ -133,6 +135,18 @@ function AuthedLayout() {
               </span>
               <span className="app-header-name">{user?.name ?? 'User'}</span>
             </div>
+            <button
+              type="button"
+              onClick={async () => {
+                await logout();
+                toast('Signed out', 'info');
+                navigate('/login');
+              }}
+              className="app-header-logout"
+              aria-label="Sign out"
+            >
+              Logout
+            </button>
           </div>
         </header>
 
